@@ -16,9 +16,11 @@ NC=$'\033[0m' # No Color
         if [[ $1 =~ $re ]] ; then
           # output the command first
           cat .ok | echo -e "${CYAN}$ ${NC}$(sed $1'!d')" | sed -E "s/(#.*)\$/${BLUE}\1${NC}/1"
+          # save and remove argument. Remaining arguments are passwed to eval automatically
+          LINE_NR=$1
+          shift
           # execute that line from the file
-          # TODO: pass through any remaining parameters, i.e ${@:2}
-          eval $( cat .ok | sed $1'!d' )
+          eval $( cat .ok | sed ${LINE_NR}'!d' )
         else
           # list the content of the file, with a number (1-based) before each line
           cat .ok | awk -v z=$CYAN -v n=$NC '{print z "" ++i "." n " " $0 }' | sed -E "s/(#.*)\$/${BLUE}\1${NC}/1"

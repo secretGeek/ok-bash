@@ -5,9 +5,9 @@
 ok() {
 
 # used for colored output
-CYAN='\033[0;36m'
+CYAN=$'\033[0;36m'
 BLUE=$'\033[0;34m'
-NC='\033[0m' # No Color
+NC=$'\033[0m' # No Color
 
   # if there is a file called .ok...
   if [ -f .ok ]; then
@@ -15,13 +15,13 @@ NC='\033[0m' # No Color
         # if the user provided a parameter, $1, which contains a number...
         if [[ $1 =~ $re ]] ; then
           # output the command first
-          cat .ok | echo -e "${CYAN}$ ${NC}$(sed $1'!d')" | sed "s/#/${BLUE}#/1"
+          cat .ok | echo -e "${CYAN}$ ${NC}$(sed $1'!d')" | sed -E "s/(#.*)\$/${BLUE}\1${NC}/1"
           # execute that line from the file
           # TODO: pass through any remaining parameters, i.e ${@:2}
           eval $( cat .ok | sed $1'!d' )
         else
           # list the content of the file, with a number (1-based) before each line
-          cat .ok | awk -v z=$CYAN -v n=$NC '{print z "" ++i "." n " " $0 }' | sed "s/#/${BLUE}#/1"
+          cat .ok | awk -v z=$CYAN -v n=$NC '{print z "" ++i "." n " " $0 }' | sed -E "s/(#.*)\$/${BLUE}\1${NC}/1"
         fi
   fi
 }

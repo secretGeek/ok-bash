@@ -18,7 +18,7 @@ NC='\033[0m' # No Color
           cat .ok | echo -e "${CYAN}$ ${NC}$(sed $1'!d')" | sed "s/#/${BLUE}#/1"
           # execute that line from the file
           # TODO: pass through any remaining parameters, i.e ${@:2}
-          source <( cat .ok | sed $1'!d' )
+          eval $( cat .ok | sed $1'!d' )
         else
           # list the content of the file, with a number (1-based) before each line
           cat .ok | awk -v z=$CYAN -v n=$NC '{print z "" ++i "." n " " $0 }' | sed "s/#/${BLUE}#/1"

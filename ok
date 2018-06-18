@@ -1,25 +1,29 @@
+#!/usr/bin/env bash
+
 # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/ok"
 
 ok() {
 
 # used for colored output
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+local CYAN=$'\033[0;36m'
+local BLUE=$'\033[0;34m'
+local NC=$'\033[0m' # No Color
 
   # if there is a file called .ok...
   if [ -f .ok ]; then
         re='^[0-9]+$'
         # if the user provided a parameter, $1, which contains a number...
         if [[ $1 =~ $re ]] ; then
-          # output the command first (TODO: output trailing comments in a different color)
-          cat .ok | echo -e "${CYAN}$ ${NC}$(sed $1'!d')"
+          # output the command first
+          cat .ok | echo -e "${CYAN}$ ${NC}$(sed $1'!d')" | sed -E "s/(#.*)\$/${BLUE}\1${NC}/1"
+          # save and remove argument. Remaining arguments are passwed to eval automatically
+          LINE_NR=$1
+          shift
           # execute that line from the file
-          # TODO: pass through any remaining parameters, i.e ${@:2}
-          source <( cat .ok | sed $1'!d' )
+          eval $( cat .ok | sed ${LINE_NR}'!d' )
         else
           # list the content of the file, with a number (1-based) before each line
-          # TODO: output trailing comments in a different color
-          cat .ok | awk -v z=$CYAN -v n=$NC '{print z "" ++i "." n " " $0 }'
+          cat .ok | awk -v z=$CYAN -v n=$NC '{print z "" ++i "." n " " $0 }' | sed -E "s/(#.*)\$/${BLUE}\1${NC}/1"
         fi
   fi
 }

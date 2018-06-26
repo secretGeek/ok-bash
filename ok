@@ -3,38 +3,40 @@
 # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/ok"
 
 ok() {
+    # used for colored output
+    local C_NC=$'\033[0m'
+    if [ -z ${OK_C_HEADING+x} ]; then local C_HEADING=$'\033[0;31m'; else local C_HEADING=$OK_C_HEADING; fi #HEADING defaults to RED
+    if [ -z ${OK_C_NUMBER+x} ];  then local C_NUMBER=$'\033[0;36m';  else local C_NUMBER=$OK_C_NUMBER;   fi #NUMBER defaults to CYAN
+    if [ -z ${OK_C_COMMENT+x} ]; then local C_COMMENT=$'\033[0;34m'; else local C_COMMENT=$OK_C_COMMENT; fi #COMMENT defaults to BLUE
+    if [ -z ${OK_C_COMMAND+x} ]; then local C_COMMAND=$C_NC;         else local C_COMMAND=$OK_C_COMMAND; fi #COMMAND defaults to NO COLOR
+    if [ -z ${OK_C_PROMPT+x} ];  then local C_PROMPT=$C_NUMBER;      else local C_PROMPT=$OK_C_PROMPT;   fi #PROMPT defaults to same color as NUMBER
 
-# used for colored output
-local RED=$'\033[0;31m'
-local CYAN=$'\033[0;36m'
-local BLUE=$'\033[0;34m'
-local NC=$'\033[0m' # No Color
-
-  # if there is a file called .ok...
-  if [ -f .ok ]; then
+    # if there is a file called .ok...
+    if [ -f .ok ]; then
         re='^[0-9]+$'
         # if the user provided a parameter, $1, which contains a number...
         if [[ $1 =~ $re ]] ; then
-          # save and remove argument. Remaining arguments are passwed to eval automatically
-          LINE_NR=$1
-          shift
-          # output the command first
-          cat .ok | grep -vE "^#" | echo -e "${CYAN}$ ${NC}$(sed $LINE_NR'!d')" | sed -E "s/(#.*)\$/${BLUE}\1${NC}/1"
-          # remove commented lines, and execute that line from the file
-          eval $( cat .ok | grep -vE "^#" | sed ${LINE_NR}'!d' )
+            # save and remove argument. Remaining arguments are passwed to eval automatically
+            LINE_NR=$1
+            shift
+            LINE_TEXT=$( cat .ok | grep -vE "^#" | sed ${LINE_NR}'!d' )
+            # output the command first
+            echo -e "${C_PROMPT}\$ ${C_COMMAND}${LINE_TEXT}${C_NC}" | sed -E "s/(#.*)\$/${C_COMMENT}\1/1"
+            # remove commented lines, and execute that line from the file
+            eval $LINE_TEXT
         else
-          # list the content of the file, with a number (1-based) before each line,
-          # except lines starting with a "#", those are printed red without a number) as headers
-          cat .ok | awk -v r=$RED -v z=$CYAN -v b=$BLUE -v n=$NC $'
-            $0 ~ /^#/ {
-              #print the (sub-)headings
-              print r $0 n;
-            }
-            $0 ~ /^[^#]/ {
-              #print the commands
-              sub(/#/,b "#");
-              print z "" ++i "." n " " $0 n;
-            }'
+            # list the content of the file, with a number (1-based) before each line,
+            # except lines starting with a "#", those are printed red without a number) as headers
+            cat .ok | awk -v h=$C_HEADING -v n=$C_NUMBER -v c=$C_COMMENT -v m=$C_COMMAND -v x=$C_NC $'
+                $0 ~ /^#/ {
+                    #print the (sub-)headings
+                    print x h $0 x;
+                }
+                $0 ~ /^[^#]/ {
+                    #print the commands
+                    sub(/#/,c "#");
+                    print x n "" ++i "." m " " $0 x;
+                }'
         fi
-  fi
+    fi
 }

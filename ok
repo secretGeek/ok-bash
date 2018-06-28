@@ -3,13 +3,13 @@
 # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/ok"
 
 ok() {
-    # used for colored output
-    local C_NC=$'\033[0m'
-    if [ -z ${OK_C_HEADING+x} ]; then local C_HEADING=$'\033[0;31m'; else local C_HEADING=$OK_C_HEADING; fi #HEADING defaults to RED
-    if [ -z ${OK_C_NUMBER+x} ];  then local C_NUMBER=$'\033[0;36m';  else local C_NUMBER=$OK_C_NUMBER;   fi #NUMBER defaults to CYAN
-    if [ -z ${OK_C_COMMENT+x} ]; then local C_COMMENT=$'\033[0;34m'; else local C_COMMENT=$OK_C_COMMENT; fi #COMMENT defaults to BLUE
-    if [ -z ${OK_C_COMMAND+x} ]; then local C_COMMAND=$C_NC;         else local C_COMMAND=$OK_C_COMMAND; fi #COMMAND defaults to NO COLOR
-    if [ -z ${OK_C_PROMPT+x} ];  then local C_PROMPT=$C_NUMBER;      else local C_PROMPT=$OK_C_PROMPT;   fi #PROMPT defaults to same color as NUMBER
+    # used for colored output (see: https://stackoverflow.com/a/20983251/56)
+    local C_NC=$(tput sgr 0)
+    if [ -z ${_OK_C_HEADING+x} ]; then local C_HEADING=$(tput setaf 1); else local C_HEADING=$_OK_C_HEADING; fi #HEADING defaults to RED
+    if [ -z ${_OK_C_NUMBER+x} ];  then local C_NUMBER=$(tput setaf 6);  else local C_NUMBER=$_OK_C_NUMBER;   fi #NUMBER defaults to CYAN
+    if [ -z ${_OK_C_COMMENT+x} ]; then local C_COMMENT=$(tput setaf 4); else local C_COMMENT=$_OK_C_COMMENT; fi #COMMENT defaults to BLUE
+    if [ -z ${_OK_C_COMMAND+x} ]; then local C_COMMAND=$C_NC;           else local C_COMMAND=$_OK_C_COMMAND; fi #COMMAND defaults to NO COLOR
+    if [ -z ${_OK_C_PROMPT+x} ];  then local C_PROMPT=$C_NUMBER;        else local C_PROMPT=$_OK_C_PROMPT;   fi #PROMPT defaults to same color as NUMBER
 
     # if there is a file called .ok...
     if [ -f .ok ]; then

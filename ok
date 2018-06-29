@@ -3,27 +3,40 @@
 # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/ok"
 
 ok() {
+    # used for colored output (see: https://stackoverflow.com/a/20983251/56)
+    local C_NC=$(tput sgr 0)
+    if [ -z ${_OK_C_HEADING+x} ]; then local C_HEADING=$(tput setaf 1); else local C_HEADING=$_OK_C_HEADING; fi #HEADING defaults to RED
+    if [ -z ${_OK_C_NUMBER+x} ];  then local C_NUMBER=$(tput setaf 6);  else local C_NUMBER=$_OK_C_NUMBER;   fi #NUMBER defaults to CYAN
+    if [ -z ${_OK_C_COMMENT+x} ]; then local C_COMMENT=$(tput setaf 4); else local C_COMMENT=$_OK_C_COMMENT; fi #COMMENT defaults to BLUE
+    if [ -z ${_OK_C_COMMAND+x} ]; then local C_COMMAND=$C_NC;           else local C_COMMAND=$_OK_C_COMMAND; fi #COMMAND defaults to NO COLOR
+    if [ -z ${_OK_C_PROMPT+x} ];  then local C_PROMPT=$C_NUMBER;        else local C_PROMPT=$_OK_C_PROMPT;   fi #PROMPT defaults to same color as NUMBER
 
-# used for colored output
-local CYAN=$'\033[0;36m'
-local BLUE=$'\033[0;34m'
-local NC=$'\033[0m' # No Color
-
-  # if there is a file called .ok...
-  if [ -f .ok ]; then
+    # if there is a file called .ok...
+    if [ -f .ok ]; then
         re='^[0-9]+$'
         # if the user provided a parameter, $1, which contains a number...
         if [[ $1 =~ $re ]] ; then
-          # output the command first
-          cat .ok | echo -e "${CYAN}$ ${NC}$(sed $1'!d')" | sed -E "s/(#.*)\$/${BLUE}\1${NC}/1"
-          # save and remove argument. Remaining arguments are passwed to eval automatically
-          LINE_NR=$1
-          shift
-          # execute that line from the file
-          eval $( cat .ok | sed ${LINE_NR}'!d' )
+            # save and remove argument. Remaining arguments are passwed to eval automatically
+            LINE_NR=$1
+            shift
+            LINE_TEXT=$( cat .ok | grep -vE "^#" | sed ${LINE_NR}'!d' )
+            # output the command first
+            echo -e "${C_PROMPT}\$ ${C_COMMAND}${LINE_TEXT}${C_NC}" | sed -E "s/(#.*)\$/${C_COMMENT}\1/1"
+            # remove commented lines, and execute that line from the file
+            eval $LINE_TEXT
         else
-          # list the content of the file, with a number (1-based) before each line
-          cat .ok | awk -v z=$CYAN -v n=$NC '{print z "" ++i "." n " " $0 }' | sed -E "s/(#.*)\$/${BLUE}\1${NC}/1"
+            # list the content of the file, with a number (1-based) before each line,
+            # except lines starting with a "#", those are printed red without a number) as headers
+            cat .ok | awk -v h=$C_HEADING -v n=$C_NUMBER -v c=$C_COMMENT -v m=$C_COMMAND -v x=$C_NC $'
+                $0 ~ /^#/ {
+                    #print the (sub-)headings
+                    print x h $0 x;
+                }
+                $0 ~ /^[^#]/ {
+                    #print the commands
+                    sub(/#/,c "#");
+                    print x n "" ++i "." m " " $0 x;
+                }'
         fi
-  fi
+    fi
 }

@@ -10,10 +10,12 @@ command (use one):
   <number>           Run the <number>th command from the ".ok" file
   -l, --list         Show the list from the ".ok" file
   -L, --list-once    Same as list, but only show when pwd is different from previous run
-  -?, -h, --help     Show this usage page'
+  -p, --list-prompt  Default command. Show the list and wait for prompt (--list and <number> in one command)
+  -?, -h, --help     Show this usage page
+'
         if [[ -n $1 ]]; then
-            echo
         	echo "$1"
+            echo
         fi
     }
 
@@ -22,7 +24,7 @@ command (use one):
         # save and remove argument. Remaining arguments are passwed to eval automatically
         local LINE_TEXT=$( cat .ok | grep -vE "^#" | sed ${LINE_NR}'!d' )
         # output the command first
-        echo -e "${C_PROMPT}\$ ${C_COMMAND}${LINE_TEXT}${C_NC}" | sed -E "s/(#.*)\$/${C_COMMENT}\1/1"
+        echo -e "${C_PROMPT}${PROMPT}${C_COMMAND}${LINE_TEXT}${C_NC}" | sed -E "s/(#.*)\$/${C_COMMENT}\1/1"
         # remove commented lines, and execute that line from the file
         eval $LINE_TEXT
     }
@@ -47,6 +49,7 @@ command (use one):
     local cmd='list'
     local line_nr=0
     local once_check=0
+    local show_prompt=1
     local usage_error=
     while (( $# > 0 )) ; do
         if [[ $1 =~ $re_is_num ]]; then
@@ -58,6 +61,7 @@ command (use one):
             case $1 in
                 -l | --list)        cmd=list;;
                 -L | --list-once)   cmd=list; once_check=1;;
+                -p | --list-prompt) cmd=list; show_prompt=1;;
                 -? | -h | --help )  cmd=usage;;
                 *)                  cmd=usage; usage_error="Unknown command/option '$1'";;
             esac
@@ -72,6 +76,8 @@ command (use one):
     if [ -z ${_OK_C_COMMENT+x} ]; then local C_COMMENT=$(tput setaf 4); else local C_COMMENT=$_OK_C_COMMENT; fi #COMMENT defaults to BLUE
     if [ -z ${_OK_C_COMMAND+x} ]; then local C_COMMAND=$C_NC;           else local C_COMMAND=$_OK_C_COMMAND; fi #COMMAND defaults to NO COLOR
     if [ -z ${_OK_C_PROMPT+x} ];  then local C_PROMPT=$C_NUMBER;        else local C_PROMPT=$_OK_C_PROMPT;   fi #PROMPT defaults to same color as NUMBER
+    # other customizations
+    if [ -z ${_OK_PROMPT+x} ];    then local PROMPT="$ ";               else local PROMPT=$_OK_PROMPT;       fi
 
     # if there is a file called .ok...
     if [ -f .ok ]; then
@@ -81,6 +87,12 @@ command (use one):
         elif [[ $cmd == list ]]; then
             if [[ $once_check == 0 || ($once_check == 1 && $_OK_LAST_PWD != $(pwd)) ]]; then
                 cmd_list
+                if [[ $show_prompt == 1 ]]; then
+                    read -p "${_OK_C_PROMPT}${PROMPT}${C_NC}" line_nr
+                    if [[ $line_nr =~ $re_is_num ]]; then
+                        cmd_run $line_nr
+                    fi
+                fi
             fi
         elif [[ $cmd == usage ]]; then
             cmd_usage "$usage_error"

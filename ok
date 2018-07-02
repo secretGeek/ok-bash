@@ -23,10 +23,12 @@ command (use one):
         local LINE_NR=$1
         # save and remove argument. Remaining arguments are passwed to eval automatically
         local LINE_TEXT=$( cat .ok | grep -vE "^#" | sed ${LINE_NR}'!d' )
-        # output the command first
-        echo -e "${C_PROMPT}${PROMPT}${C_COMMAND}${LINE_TEXT}${C_NC}" | sed -E "s/(#.*)\$/${C_COMMENT}\1/1"
-        # remove commented lines, and execute that line from the file
-        eval $LINE_TEXT
+        if [[ -n $LINE_TEXT ]]; then
+            # output the command first
+            echo -e "${C_PROMPT}${PROMPT}${C_COMMAND}${LINE_TEXT}${C_NC}" | sed -E "s/(#.*)\$/${C_COMMENT}\1/1"
+            # remove commented lines, and execute that line from the file
+            eval $LINE_TEXT
+        fi
     }
 
     function cmd_list {

@@ -3,7 +3,8 @@
 # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/ok"
 
 ok() {
-    function cmd_usage {
+    function _ok_cmd_usage {
+        unset -f _ok_cmd_usage #emulate a "local" function
         echo 'Usage: ok [ok-options] <number> [script-options..]
                      ok command [options]
 
@@ -15,17 +16,18 @@ command (use one):
   h, help         Show this usage page
 ok-options:
   -v, --verbose   Show more output, most of the time to stderr
-  -, --           Next options will be passed as <script-options> (see next)
+  -:, --pass-args Next options will be passed as <script-options> (see next)
 script-options:
   ...             These are passed through, when a line is executed
 '
         if [[ -n $1 ]]; then
-        	echo "$1"
+            echo "$1"
             echo
         fi
     }
 
-    function cmd_run {
+    function _ok_cmd_run {
+        unset -f _ok_cmd_run
         local LINE_NR=$1
         shift
         # save and remove argument. Remaining arguments are passwed to eval automatically
@@ -42,7 +44,8 @@ script-options:
         fi
     }
 
-    function cmd_list {
+    function _ok_cmd_list {
+        unset -f _ok_cmd_list
         # list the content of the file, with a number (1-based) before each line,
         # except lines starting with a "#", those are printed red without a number) as headers
         cat .ok | awk -v h=$C_HEADING -v n=$C_NUMBER -v c=$C_COMMENT -v m=$C_COMMAND -v x=$C_NC $'
@@ -65,11 +68,12 @@ script-options:
     local show_prompt=1
     local usage_error=
     local verbose=0
-    while (( $# > 0 )) ; do
+    local loop_args=1
+    while (( $# > 0 && $loop_args == 1 )) ; do
         if [[ $1 =~ $re_is_num ]]; then
-            cmd='run'
+            cmd=run
             line_nr=$1
-            shift; break
+            loop_args=0
         else
             case $1 in
                 #commands
@@ -80,7 +84,7 @@ script-options:
                 #options
                 -\? | -h | --help) cmd=usage;;
                 -v | --verbose)    verbose=1;;
-                - | --)            shift; break;;
+                -: | --pass-args)  loop_args=0;;
                 *)                 cmd=usage; usage_error="Unknown command/option '$1'";;
             esac
         fi
@@ -101,14 +105,14 @@ script-options:
     if [ -f .ok ]; then
         # if the user provided a parameter, $1, which contains a number...
         if [[ $cmd == run ]]; then
-            cmd_run $line_nr "$@"
+            _ok_cmd_run $line_nr "$@"
         elif [[ $cmd == list ]]; then
             if [[ $once_check == 0 || ($once_check == 1 && $_OK_LAST_PWD != $(pwd)) ]]; then
-                cmd_list
+                _ok_cmd_list
                 if [[ $show_prompt == 1 ]]; then
                     read -p "${_OK_C_PROMPT}${PROMPT}${C_NC}" line_nr
                     if [[ $line_nr =~ $re_is_num ]]; then
-                        cmd_run $line_nr "$@"
+                        _ok_cmd_run $line_nr "$@"
                     else
                         if [[ $verbose == 1 ]]; then
                             >&2 echo "ERROR: entered line number '$LINE_NR' is not a number"
@@ -120,7 +124,7 @@ script-options:
                 echo "The listing for this folder has already been shown"
             fi
         elif [[ $cmd == usage ]]; then
-            cmd_usage "$usage_error"
+            _ok_cmd_usage "$usage_error"
         fi
         export _OK_LAST_PWD=$(pwd)
     else

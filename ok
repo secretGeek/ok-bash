@@ -4,16 +4,16 @@
 
 ok() {
     function cmd_usage {
-        echo 'Usage: ok command
+        echo 'Usage: ok command [options]
 
 command (use one):
-  <number>           Run the <number>th command from the ".ok" file
-  -l, --list         Show the list from the ".ok" file
-  -L, --list-once    Same as list, but only show when pwd is different from previous run
-  -p, --list-prompt  Default command. Show the list and wait for prompt (--list and <number> in one command)
-  -?, -h, --help     Show this usage page
+  <number>        Run the <number>th command from the ".ok" file
+  l, list         Show the list from the ".ok" file
+  L, list-once    Same as list, but only show when pwd is different from previous run
+  p, list-prompt  Default command. Show the list and wait for prompt (--list and <number> in one command)
+  h, help         Show this usage page
 options:
-  -v, --verbose      Show more output, most of the time to stderr
+  -v, --verbose   Show more output, most of the time to stderr
 '
         if [[ -n $1 ]]; then
         	echo "$1"
@@ -68,12 +68,15 @@ options:
             break
         else
             case $1 in
-                -l | --list)        cmd=list;;
-                -L | --list-once)   cmd=list; once_check=1;;
-                -p | --list-prompt) cmd=list; show_prompt=1;;
-                -\? | -h | --help)  cmd=usage;;
-                -v | --verbose)     verbose=1;;
-                *)                  cmd=usage; usage_error="Unknown command/option '$1'";;
+                #commands
+                l | list)          cmd=list;;
+                L | list-once)     cmd=list; once_check=1;;
+                p | list-prompt)   cmd=list; show_prompt=1;;
+                h | help)          cmd=usage;;
+                #options
+                -\? | -h | --help) cmd=usage;;
+                -v | --verbose)    verbose=1;;
+                *)                 cmd=usage; usage_error="Unknown command/option '$1'";;
             esac
         fi
         shift
@@ -107,7 +110,8 @@ options:
                         fi
                     fi
                 fi
-            elif [[ $once_check == 1 && $_OK_LAST_PWD == $(pwd) ]]; then
+            fi
+            if [[ $verbose = 1 && $once_check == 1 && $_OK_LAST_PWD == $(pwd) ]]; then
                 echo "The listing for this folder has already been shown"
             fi
         elif [[ $cmd == usage ]]; then

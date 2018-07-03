@@ -4,7 +4,8 @@
 
 ok() {
     function cmd_usage {
-        echo 'Usage: ok command [options]
+        echo 'Usage: ok [ok-options] <number> [script-options..]
+                     ok command [options]
 
 command (use one):
   <number>        Run the <number>th command from the ".ok" file
@@ -12,8 +13,11 @@ command (use one):
   L, list-once    Same as list, but only show when pwd is different from previous run
   p, list-prompt  Default command. Show the list and wait for prompt (--list and <number> in one command)
   h, help         Show this usage page
-options:
+ok-options:
   -v, --verbose   Show more output, most of the time to stderr
+  -, --           Next options will be passed as <script-options> (see next)
+script-options:
+  ...             These are passed through, when a line is executed
 '
         if [[ -n $1 ]]; then
         	echo "$1"
@@ -65,8 +69,7 @@ options:
         if [[ $1 =~ $re_is_num ]]; then
             cmd='run'
             line_nr=$1
-            shift
-            break
+            shift; break
         else
             case $1 in
                 #commands
@@ -77,6 +80,7 @@ options:
                 #options
                 -\? | -h | --help) cmd=usage;;
                 -v | --verbose)    verbose=1;;
+                - | --)            shift; break;;
                 *)                 cmd=usage; usage_error="Unknown command/option '$1'";;
             esac
         fi
@@ -104,7 +108,7 @@ options:
                 if [[ $show_prompt == 1 ]]; then
                     read -p "${_OK_C_PROMPT}${PROMPT}${C_NC}" line_nr
                     if [[ $line_nr =~ $re_is_num ]]; then
-                        cmd_run $line_nr
+                        cmd_run $line_nr "$@"
                     else
                         if [[ $verbose == 1 ]]; then
                             >&2 echo "ERROR: entered line number '$LINE_NR' is not a number"

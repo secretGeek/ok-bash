@@ -23,6 +23,7 @@ options:
 
     function cmd_run {
         local LINE_NR=$1
+        shift
         # save and remove argument. Remaining arguments are passwed to eval automatically
         local LINE_TEXT=$( cat .ok | grep -vE "^#" | sed ${LINE_NR}'!d' )
         if [[ -n $LINE_TEXT ]]; then
@@ -96,7 +97,7 @@ options:
     if [ -f .ok ]; then
         # if the user provided a parameter, $1, which contains a number...
         if [[ $cmd == run ]]; then
-            cmd_run $line_nr
+            cmd_run $line_nr "$@"
         elif [[ $cmd == list ]]; then
             if [[ $once_check == 0 || ($once_check == 1 && $_OK_LAST_PWD != $(pwd)) ]]; then
                 cmd_list

@@ -5,8 +5,8 @@
 ok() {
     function _ok_cmd_usage {
         unset -f _ok_cmd_usage #emulate a "local" function
-        echo 'Usage: ok [ok-options] <number> [script-arguments..]
-       ok command [ok-options]
+        echo 'Usage: ok [options] <number> [script-arguments..]
+       ok command [options]
 
 command (use one):
   <number>        Run the <number>th command from the ".ok" file
@@ -14,8 +14,9 @@ command (use one):
   L, list-once    Same as list, but only show when pwd is different from previous run
   p, list-prompt  Default command. Show the list and wait for input at the ok-prompt (--list and <number> in one command)
   h, help         Show this usage page
-ok-options:
+options:
   -v, --verbose   Show more output, most of the time to stderr
+  -q, --quiet     Only show really necessary output
 script-arguments:
   ...             These are passed through, when a line is executed (you can enter these too at the ok-prompt)
 '
@@ -32,12 +33,14 @@ script-arguments:
         # save and remove argument. Remaining arguments are passwed to eval automatically
         local LINE_TEXT=$( cat .ok | grep -vE "^#" | sed ${LINE_NR}'!d' )
         if [[ -n $LINE_TEXT ]]; then
-            # output the command first
-            echo -e "${C_PROMPT}${PROMPT}${C_COMMAND}${LINE_TEXT}${C_NC}" | sed -E "s/(#.*)\$/${C_COMMENT}\1/1"
+            if [[ $verbose -ge 1 ]]; then
+                # output the command first
+                echo -e "${C_PROMPT}${PROMPT}${C_COMMAND}${LINE_TEXT}${C_NC}" | sed -E "s/(#.*)\$/${C_COMMENT}\1/1"
+            fi
             # remove commented lines, and execute that line from the file
             eval $LINE_TEXT
         else
-            if [[ $verbose == 1 ]]; then
+            if [[ $verbose -ge 2 ]]; then
                 >&2 echo "ERROR: entered line number '$LINE_NR' does not exist"
             fi
         fi
@@ -47,7 +50,7 @@ script-arguments:
         unset -f _ok_cmd_list
         # list the content of the file, with a number (1-based) before each line,
         # except lines starting with a "#", those are printed red without a number) as headers
-        cat .ok | awk -v h=$C_HEADING -v n=$C_NUMBER -v c=$C_COMMENT -v m=$C_COMMAND -v x=$C_NC $'
+        cat .ok | awk -v h="$C_HEADING" -v n="$C_NUMBER" -v c="$C_COMMENT" -v m="$C_COMMAND" -v x="$C_NC" $'
             $0 ~ /^#/ {
                 #print the (sub-)headings
                 print x h $0 x;
@@ -59,6 +62,17 @@ script-arguments:
             }'
     }
 
+    # used for colored output (see: https://stackoverflow.com/a/20983251/56)
+    local C_NC=$(tput sgr 0)
+    if [ -z ${_OK_C_HEADING+x} ]; then local C_HEADING=$(tput setaf 1); else local C_HEADING=$_OK_C_HEADING; fi #HEADING defaults to RED
+    if [ -z ${_OK_C_NUMBER+x} ];  then local C_NUMBER=$(tput setaf 6);  else local C_NUMBER=$_OK_C_NUMBER;   fi #NUMBER defaults to CYAN
+    if [ -z ${_OK_C_COMMENT+x} ]; then local C_COMMENT=$(tput setaf 4); else local C_COMMENT=$_OK_C_COMMENT; fi #COMMENT defaults to BLUE
+    if [ -z ${_OK_C_COMMAND+x} ]; then local C_COMMAND=$C_NC;           else local C_COMMAND=$_OK_C_COMMAND; fi #COMMAND defaults to NO COLOR
+    if [ -z ${_OK_C_PROMPT+x} ];  then local C_PROMPT=$C_NUMBER;        else local C_PROMPT=$_OK_C_PROMPT;   fi #PROMPT defaults to same color as NUMBER
+    # other customizations (some environment variables can be overridden by arguments)
+    if [ -z ${_OK_PROMPT+x} ];    then local PROMPT="$ ";               else local PROMPT=$_OK_PROMPT;       fi
+    if [ -z ${_OK_VERBOSE+x} ];   then local verbose=1;                 else local verbose=$_OK_VERBOSE;     fi
+
     # handle command line arguments first
     local re_is_num='^[0-9]+$'
     local cmd=list
@@ -66,8 +80,7 @@ script-arguments:
     local once_check=0
     local show_prompt=1
     local usage_error=
-    local verbose=0
-    local loop_args=1
+    local loop_args=1 #the pascal-way to break loops
     while (( $# > 0 && $loop_args == 1 )) ; do
         if [[ $1 =~ $re_is_num ]]; then
             cmd=run
@@ -82,22 +95,13 @@ script-arguments:
                 h | help)          cmd=usage;;
                 #options
                 -\? | -h | --help) cmd=usage;;
-                -v | --verbose)    verbose=1;;
+                -v | --verbose)    verbose=2;;
+                -q | --quiet)      verbose=0;;
                 *)                 cmd=usage; usage_error="Unknown command/option '$1'";;
             esac
         fi
         shift
     done
-
-    # used for colored output (see: https://stackoverflow.com/a/20983251/56)
-    local C_NC=$(tput sgr 0)
-    if [ -z ${_OK_C_HEADING+x} ]; then local C_HEADING=$(tput setaf 1); else local C_HEADING=$_OK_C_HEADING; fi #HEADING defaults to RED
-    if [ -z ${_OK_C_NUMBER+x} ];  then local C_NUMBER=$(tput setaf 6);  else local C_NUMBER=$_OK_C_NUMBER;   fi #NUMBER defaults to CYAN
-    if [ -z ${_OK_C_COMMENT+x} ]; then local C_COMMENT=$(tput setaf 4); else local C_COMMENT=$_OK_C_COMMENT; fi #COMMENT defaults to BLUE
-    if [ -z ${_OK_C_COMMAND+x} ]; then local C_COMMAND=$C_NC;           else local C_COMMAND=$_OK_C_COMMAND; fi #COMMAND defaults to NO COLOR
-    if [ -z ${_OK_C_PROMPT+x} ];  then local C_PROMPT=$C_NUMBER;        else local C_PROMPT=$_OK_C_PROMPT;   fi #PROMPT defaults to same color as NUMBER
-    # other customizations
-    if [ -z ${_OK_PROMPT+x} ];    then local PROMPT="$ ";               else local PROMPT=$_OK_PROMPT;       fi
 
     # if there is a file called .ok...
     if [ -f .ok ]; then
@@ -110,18 +114,18 @@ script-arguments:
                 if [[ $show_prompt == 1 ]]; then
                     local prompt_input
                     local re_num_begin='^[0-9]+($| )'
-                    read -p "${_OK_C_PROMPT}${PROMPT}${C_NC}" prompt_input
+                    read -p "${C_PROMPT}${PROMPT}${C_NC}" prompt_input
                     if [[ $prompt_input =~ $re_num_begin ]]; then
                         # You can enter arguments at the ok-prompt too
                         eval _ok_cmd_run $prompt_input
                     else
-                        if [[ $verbose == 1 ]]; then
+                        if [[ $verbose -ge 2 ]]; then
                             >&2 echo "ERROR: entered line number '$line_nr' is not a number"
                         fi
                     fi
                 fi
             fi
-            if [[ $verbose = 1 && $once_check == 1 && $_OK_LAST_PWD == $(pwd) ]]; then
+            if [[ $verbose -ge 2 && $once_check == 1 && $_OK_LAST_PWD == $(pwd) ]]; then
                 echo "The listing for this folder has already been shown"
             fi
         elif [[ $cmd == usage ]]; then
@@ -129,7 +133,7 @@ script-arguments:
         fi
         export _OK_LAST_PWD=$(pwd)
     else
-        if [[ $verbose == 1 ]]; then
+        if [[ $verbose -ge 2 ]]; then
             echo "Nothing to do: this folder doesn't have an '.ok' file"
         fi
     fi

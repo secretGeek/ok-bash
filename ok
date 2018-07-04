@@ -12,13 +12,12 @@ command (use one):
   <number>        Run the <number>th command from the ".ok" file
   l, list         Show the list from the ".ok" file
   L, list-once    Same as list, but only show when pwd is different from previous run
-  p, list-prompt  Default command. Show the list and wait for prompt (--list and <number> in one command)
+  p, list-prompt  Default command. Show the list and wait for input at the ok-prompt (--list and <number> in one command)
   h, help         Show this usage page
 ok-options:
   -v, --verbose   Show more output, most of the time to stderr
-  -:, --pass-args Next options will be passed as <script-options> (see script-arguments)
 script-arguments:
-  ...             These are passed through, when a line is executed (you can enter these too at the prompt, when used)
+  ...             These are passed through, when a line is executed (you can enter these too at the ok-prompt)
 '
         if [[ -n $1 ]]; then
             echo "$1"
@@ -62,7 +61,6 @@ script-arguments:
 
     # handle command line arguments first
     local re_is_num='^[0-9]+$'
-    local re_num_begin='^[0-9]+ '
     local cmd=list
     local line_nr=0
     local once_check=0
@@ -78,14 +76,13 @@ script-arguments:
         else
             case $1 in
                 #commands
-                l | list)          cmd=list;;
-                L | list-once)     cmd=list; once_check=1;;
-                p | list-prompt)   cmd=list; show_prompt=1;;
+                l | list)          cmd=list; show_prompt=0; once_check=0;;
+                L | list-once)     cmd=list; show_prompt=0; once_check=1;;
+                p | list-prompt)   cmd=list; show_prompt=1; once_check=0;;
                 h | help)          cmd=usage;;
                 #options
                 -\? | -h | --help) cmd=usage;;
                 -v | --verbose)    verbose=1;;
-                -: | --pass-args)  loop_args=0;;
                 *)                 cmd=usage; usage_error="Unknown command/option '$1'";;
             esac
         fi
@@ -112,14 +109,11 @@ script-arguments:
                 _ok_cmd_list
                 if [[ $show_prompt == 1 ]]; then
                     local prompt_input
+                    local re_num_begin='^[0-9]+($| )'
                     read -p "${_OK_C_PROMPT}${PROMPT}${C_NC}" prompt_input
-                    if [[ $prompt_input =~ $re_is_num ]]; then
-                        _ok_cmd_run $prompt_input "$@"
-                    elif [[ $prompt_input =~ $re_num_begin ]]; then
-                        #some bash multi-platform string handling voodoo
-                        line_nr=$(echo "${prompt_input}" | egrep -o '[[:digit:]]+')
-                        args=${prompt_input:${#line_nr}}
-                        _ok_cmd_run $line_nr $args
+                    if [[ $prompt_input =~ $re_num_begin ]]; then
+                        # You can enter arguments at the ok-prompt too
+                        eval _ok_cmd_run $prompt_input
                     else
                         if [[ $verbose == 1 ]]; then
                             >&2 echo "ERROR: entered line number '$line_nr' is not a number"

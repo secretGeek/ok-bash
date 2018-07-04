@@ -2,3 +2,6 @@
 unset _OK_C_HEADING;unset _OK_C_NUMBER;unset _OK_C_COMMENT;unset _OK_C_COMMAND;unset _OK_C_PROMPT                          #Reset colors to defaults                    
 _OK_C_HEADING="[h]";_OK_C_NUMBER="[n]";_OK_C_COMMENT="[--]";_OK_C_COMMAND="[C]";_OK_C_PROMPT="[p]"                         #Change colors to text markers for debugging 
 _OK_C_HEADING=$'\033[1;30;45m';_OK_C_NUMBER=$'\033[1;33;44m';_OK_C_COMMENT=$'\033[1;34;46m';_OK_C_COMMAND=$'\033[1;37;44m' #Custom color scheme                         
+# Tests arguments passing (you can pass arguments after <number>, both at the bash-prompt and the ok-prompt)
+echo "Passed arguments: 1:[$1], 2:[$2], 3:[$3], 4+:[${@:4}] (nr args: $#)"   # Comments starts too early, clearly a bug
+echo "All passed arguments: [$@]"

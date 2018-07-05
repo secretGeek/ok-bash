@@ -21,8 +21,8 @@ script-arguments:
   ...             These are passed through, when a line is executed (you can enter these too at the ok-prompt)
 '
         if [[ -n $1 ]]; then
-            echo "$1"
-            echo
+            echo -e "$1\n"
+            return 1
         fi
     }
 
@@ -43,6 +43,7 @@ script-arguments:
             if [[ $verbose -ge 2 ]]; then
                 >&2 echo "ERROR: entered line number '$LINE_NR' does not exist"
             fi
+            return 1
         fi
     }
 
@@ -107,31 +108,32 @@ script-arguments:
     if [ -f .ok ]; then
         # if the user provided a parameter, $1, which contains a number...
         if [[ $cmd == run ]]; then
-            _ok_cmd_run $line_nr "$@"
+            _ok_cmd_run $line_nr "$@" || return $?
         elif [[ $cmd == list ]]; then
             if [[ $once_check == 0 || ($once_check == 1 && $_OK_LAST_PWD != $(pwd)) ]]; then
-                _ok_cmd_list
+                _ok_cmd_list || return $?
                 if [[ $show_prompt == 1 ]]; then
                     local prompt_input
                     local re_num_begin='^[0-9]+($| )'
                     read -p "${C_PROMPT}${PROMPT}${C_NC}" prompt_input
                     if [[ $prompt_input =~ $re_num_begin ]]; then
                         # You can enter arguments at the ok-prompt too
-                        eval _ok_cmd_run $prompt_input
+                        eval _ok_cmd_run $prompt_input || return $?
                     else
                         if [[ $verbose -ge 2 ]]; then
-                            >&2 echo "ERROR: entered line number '$line_nr' is not a number"
+                            >&2 echo "ERROR: input '$prompt_input' does not start with a number"
                         fi
+                        return 1
                     fi
                 fi
             fi
             if [[ $verbose -ge 2 && $once_check == 1 && $_OK_LAST_PWD == $(pwd) ]]; then
                 echo "The listing for this folder has already been shown"
             fi
+            export _OK_LAST_PWD=$(pwd)
         elif [[ $cmd == usage ]]; then
-            _ok_cmd_usage "$usage_error"
+            _ok_cmd_usage "$usage_error" || return $?
         fi
-        export _OK_LAST_PWD=$(pwd)
     else
         if [[ $verbose -ge 2 ]]; then
             echo "Nothing to do: this folder doesn't have an '.ok' file"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/ok"
+# tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/path/to/ok-bash/ok.sh"
 
 ok() {
     function _ok_cmd_usage {
@@ -41,16 +41,17 @@ environment variables (other):
 
     function _ok_cmd_run {
         unset -f _ok_cmd_run
-        local LINE_NR=$1
-        shift
         # save and remove argument. Remaining arguments are passwed to eval automatically
+        local LINE_NR=$1 #LINE_NR is guaranteed to be 1 or more
+        shift
+        # get the line to be executed
         local LINE_TEXT=$( cat .ok | grep -vE "^#" | sed ${LINE_NR}'!d' )
         if [[ -n $LINE_TEXT ]]; then
             if [[ $verbose -ge 1 ]]; then
                 # output the command first
                 echo -e "${C_PROMPT}${PROMPT}${C_COMMAND}${LINE_TEXT}${C_NC}" | sed -E "s/(#.*)\$/${C_COMMENT}\1/1"
             fi
-            # remove commented lines, and execute that line from the file
+            # finally execute the line
             eval $LINE_TEXT
         else
             if [[ $verbose -ge 2 ]]; then
@@ -88,14 +89,15 @@ environment variables (other):
     if [ -z ${_OK_VERBOSE+x} ];   then local verbose=1;                 else local verbose=$_OK_VERBOSE;     fi
 
     # handle command line arguments first
-    local re_is_num='^[0-9]+$'
+    local re_is_num='^[1-9][0-9]*$' #numbers starting with "0" would be octal, and nobody knows those (also: sed on Linux complains about line "0")...
     local cmd=list
     local line_nr=0
     local once_check=0
     local show_prompt=1
     local usage_error=
-    local loop_args=1 #the pascal-way to break loops
+    local loop_args=1 #the Pascal-way to break loops
     while (( $# > 0 && $loop_args == 1 )) ; do
+        # if the user provided a parameter, $1, which contains a number...
         if [[ $1 =~ $re_is_num ]]; then
             cmd=run
             line_nr=$1
@@ -116,10 +118,9 @@ environment variables (other):
         fi
         shift
     done
-
+    
     # if there is a file called .ok...
     if [ -f .ok ]; then
-        # if the user provided a parameter, $1, which contains a number...
         if [[ $cmd == run ]]; then
             _ok_cmd_run $line_nr "$@" || return $?
         elif [[ $cmd == list ]]; then
@@ -127,10 +128,9 @@ environment variables (other):
                 _ok_cmd_list || return $?
                 if [[ $show_prompt == 1 ]]; then
                     local prompt_input
-                    local re_num_begin='^[0-9]+($| )'
+                    local re_num_begin='^[1-9][0-9]*($| )' # You can enter arguments at the ok-prompt too, hence different regex
                     read -p "${C_PROMPT}${PROMPT}${C_NC}" prompt_input
                     if [[ $prompt_input =~ $re_num_begin ]]; then
-                        # You can enter arguments at the ok-prompt too
                         eval _ok_cmd_run $prompt_input || return $?
                     else
                         if [[ $verbose -ge 2 ]]; then

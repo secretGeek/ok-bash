@@ -45,7 +45,7 @@ environment variables (other):
         local LINE_NR=$1 #LINE_NR is guaranteed to be 1 or more
         shift
         # get the line to be executed
-        local LINE_TEXT=$( cat .ok | grep -vE "^#" | sed ${LINE_NR}'!d' )
+        local LINE_TEXT=$( cat .ok | grep -vE "^(#|$)" | sed ${LINE_NR}'!d' )
         if [[ -n $LINE_TEXT ]]; then
             if [[ $verbose -ge 1 ]]; then
                 # output the command first
@@ -66,8 +66,8 @@ environment variables (other):
         # list the content of the file, with a number (1-based) before each line,
         # except lines starting with a "#", those are printed red without a number) as headers
         cat .ok | awk -v h="$C_HEADING" -v n="$C_NUMBER" -v c="$C_COMMENT" -v m="$C_COMMAND" -v x="$C_NC" $'
-            $0 ~ /^#/ {
-                #print the (sub-)headings
+            $0 ~ /^(#|$)/ {
+                #print the (sub-)headings and/or empty lines
                 print x h $0 x;
             }
             $0 ~ /^[^#]/ {

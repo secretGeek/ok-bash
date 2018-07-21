@@ -1,14 +1,15 @@
-# Manipulate customizations (colors)                                                                                                                                         
+# Manipulate customizations (colors)                                                                                                                                          
 unset _OK_C_HEADING;unset _OK_C_NUMBER;unset _OK_C_COMMENT;unset _OK_C_COMMAND;unset _OK_C_PROMPT                           #Reset colors to defaults                    
 _OK_C_HEADING="[h]";_OK_C_NUMBER="[n]";_OK_C_COMMENT="[--]";_OK_C_COMMAND="[C]";_OK_C_PROMPT="[p]"                          #Change colors to text markers for debugging 
 _OK_C_HEADING=$'\033[1;30;45m';_OK_C_NUMBER=$'\033[1;33;44m ';_OK_C_COMMENT=$'\033[1;34;46m';_OK_C_COMMAND=$'\033[1;37;44m' #Custom color scheme                         
-# Other customizations                                                                                                             
+# Other customizations                                                                                                                                             
 unset _OK_PROMPT; unset _OK_VERBOSE; unset _OK_LIST_PROMPT  # Reset to defaults                                                                               
-_OK_PROMPT="-=> "; _OK_VERBOSE=2; _OK_LIST_PROMPT=1         # Show a "nice" prompt, and give all the feedback ok can provide for, and default list'n'prompt   
-_OK_PROMPT="% "; _OK_VERBOSE=0; _OK_LIST_PROMPT=0           # Show ancient prompt, and only say the most necessary (don't even show executed command)         
+_OK_PROMPT="-=> "; _OK_VERBOSE=2; _OK_PROMPT_DEFAULT=1      # Show a "nice" prompt, and give all the feedback ok can provide for, and default list'n'prompt   
+_OK_PROMPT="% "; _OK_VERBOSE=0; _OK_PROMPT_DEFAULT=0        # Show ancient prompt, and only say the most necessary (don't even show executed command)         
 
-# Tests arguments passing (you can pass arguments after <number>, both at the bash-prompt and the ok-prompt)                              
-echo "Passed arguments: 1:[$1], 2:[$2], 3:[$3], 4+:[${@:4}] (nr args: $#)" # Comment-color starts too early; clearly a bug (so better 
-echo "All passed arguments: [$@]"                                          # not to use a number sign in a command for now)...        
-ok help --verbose                                                          # Show help page of 🆗, including environment variables
-set | grep "^_OK_"                                                         # Show all set environment variables, used with ok-bash
+# Tests arguments passing (you can pass arguments after <number>, both at the bash-prompt and the ok-prompt)                                
+echo "Passed arguments: 1:[$1], 2:[$2], 3:[$3], 4+:[${@:4}] (nr args: $#)" # Comment-color starts too early; clearly a bug (so better  
+echo "All passed arguments: [$@]"                                          # not to use a number sign in a command for now)...         
+
+ok help --verbose                                                          # Show help page of 🆗, including environment variables     
+set | grep "^_OK_"                                                         # Show all set environment variables, used with ok-bash     

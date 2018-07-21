@@ -4,7 +4,7 @@ called=$_
 
 #basically, get the absolute path of this script (handy for loads of things)
 pushd "$(dirname "${BASH_SOURCE[@]}")" > /dev/null;
-_OK_PATH_TO_ME=$(pwd)
+_OK__PATH_TO_ME=$(pwd)
 popd > /dev/null;
 
 
@@ -46,8 +46,8 @@ environment variables (other configuration):
   _OK_PROMPT_DEFAULT Setting ($l) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
   _OK_VERBOSE        Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
 environment variables (for internal use):
-  _OK_LAST_PWD       Remember the path ($_OK_LAST_PWD) that was last listed, for use with the list-once command.
-  _OK_PATH_TO_ME     The path ($_OK_PATH_TO_ME) to the location of this script.\n"
+  _OK__LAST_PWD      Remember the path ($_OK_LAST_PWD) that was last listed, for use with the list-once command.
+  _OK__PATH_TO_ME    The path ($_OK__PATH_TO_ME) to the location of this script.\n"
         fi
         if [[ -n $1 ]]; then
             echo -e "$1\n"
@@ -79,9 +79,12 @@ environment variables (for internal use):
 
     function _ok_cmd_list {
         unset -f _ok_cmd_list
+        # determine number of command lines (need to trim on macOS)
+        nr_lines=$(cat .ok | egrep "^[^#]"  | wc -l | sed 's/^[ \t]*//')
+
         # list the content of the file, with a number (1-based) before each line,
         # except lines starting with a "#", those are printed red without a number) as headers
-        cat .ok | awk -v h="$C_HEADING" -v n="$C_NUMBER" -v c="$C_COMMENT" -v m="$C_COMMAND" -v x="$C_NC" $'
+        cat .ok | awk -v h="$C_HEADING" -v n="$C_NUMBER" -v c="$C_COMMENT" -v m="$C_COMMAND" -v x="$C_NC" -v P="${#nr_lines}" $'
             $0 ~ /^(#|$)/ {
                 #print the (sub-)headings and/or empty lines
                 print x h $0 x;
@@ -89,7 +92,8 @@ environment variables (for internal use):
             $0 ~ /^[^#]/ {
                 #print the commands
                 sub(/#/,c "#");
-                print x n "" ++i "." m " " $0 x;
+                NR = sprintf("%" P "d.", ++i);
+                print x n NR m " " $0 x;
             }'
     }
 
@@ -140,7 +144,7 @@ environment variables (for internal use):
         if [[ $cmd == run ]]; then
             _ok_cmd_run $line_nr "$@" || return $?
         elif [[ $cmd == list ]]; then
-            if [[ $once_check == 0 || ($once_check == 1 && $_OK_LAST_PWD != $(pwd)) ]]; then
+            if [[ $once_check == 0 || ($once_check == 1 && $_OK__LAST_PWD != $(pwd)) ]]; then
                 _ok_cmd_list || return $?
                 if [[ $show_prompt == 1 ]]; then
                     local prompt_input
@@ -156,10 +160,10 @@ environment variables (for internal use):
                     fi
                 fi
             fi
-            if [[ $verbose -ge 2 && $once_check == 1 && $_OK_LAST_PWD == $(pwd) ]]; then
+            if [[ $verbose -ge 2 && $once_check == 1 && $_OK__LAST_PWD == $(pwd) ]]; then
                 echo "The listing for this folder has already been shown"
             fi
-            export _OK_LAST_PWD=$(pwd)
+            export _OK__LAST_PWD=$(pwd)
         elif [[ $cmd == usage ]]; then
             _ok_cmd_usage "$usage_error" || return $?
         fi
@@ -172,6 +176,6 @@ environment variables (for internal use):
 
 if [[ $called == $0 ]]; then
     # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/path/to/ok-bash/ok.sh"
-    echo 'tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". '${_OK_PATH_TO_ME}'/ok.sh"'
+    echo 'tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". '${_OK__PATH_TO_ME}'/ok.sh"'
 fi
 unset called

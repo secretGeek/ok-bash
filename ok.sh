@@ -11,34 +11,43 @@ popd > /dev/null;
 ok() {
     function _ok_cmd_usage {
         unset -f _ok_cmd_usage #emulate a "local" function
+        if [[ $show_prompt == 1 ]]; then
+            local list_default="" list_prompt_default=" Default command."
+        else
+            local list_default=" Default command." list_prompt_default=""
+        fi
         echo -e "Usage: ok [options] <number> [script-arguments..]
        ok command [options]
 
 command (use one):
-  <number>        Run the <number>th command from the '.ok' file.
-  l, list         Show the list from the '.ok' file.
-  L, list-once    Same as list, but only show when pwd is different from when the list was last shown.
-  p, list-prompt  Show the list and wait for input at the ok-prompt (like --list and <number> in one command). Default command.
-  h, help         Show this usage page.
+  <number>           Run the <number>th command from the '.ok' file.
+  l, list            Show the list from the '.ok' file.$list_default
+  L, list-once       Same as list, but only show when pwd is different from when the list was last shown.
+  p, list-prompt     Show the list and wait for input at the ok-prompt (like --list and <number> in one command).$list_prompt_default
+  h, help            Show this usage page.
 options:
-  -v, --verbose   Show more output, most of the time to stderr.
-  -q, --quiet     Only show really necessary output.
+  -v, --verbose      Show more output, most of the time to stderr.
+  -q, --quiet        Only show really necessary output.
 script-arguments:
-  ...             These are passed through, when a line is executed (you can enter these too at the ok-prompt)\n"
+  ...                These are passed through, when a line is executed (you can enter these too at the ok-prompt)\n"
 
         if [[ $verbose -ge 2 ]]; then
-            if [ -z ${_OK_PROMPT+x} ];    then local p="unset";  else local p="'$_OK_PROMPT'";  fi
-            if [ -z ${_OK_VERBOSE+x} ];   then local v="unset";  else local v="'$_OK_VERBOSE'"; fi
+            if [ -z ${_OK_PROMPT+x} ];         then local p="unset";  else local p="'$_OK_PROMPT'"; fi
+            if [ -z ${_OK_VERBOSE+x} ];        then local v="unset";  else local v="$_OK_VERBOSE"; fi
+            if [ -z ${_OK_PROMPT_DEFAULT+x} ]; then local l="unset";  else local l="$_OK_PROMPT_DEFAULT"; fi
             echo -e "environment variables (used for colored output; current colors are shown):
-  _OK_C_HEADING   ${_OK_C_HEADING}Color-code${C_NC} for lines starting with a comment (heading). Defaults to red.
-  _OK_C_NUMBER    ${_OK_C_NUMBER}Color-code${C_NC} for numbering. Defaults to cyan.
-  _OK_C_COMMENT   ${_OK_C_COMMENT}Color-code${C_NC} for comments after commands. Defaults to blue.
-  _OK_C_COMMAND   ${_OK_C_COMMAND}Color-code${C_NC} for commands. Defaults to color-reset.
-  _OK_C_PROMPT    ${_OK_C_PROMPT}Color-code${C_NC} for prompt (both input as command confirmation). Defaults to color for numbering.
-environment variables (other):
-  _OK_PROMPT      String ($p) used as prompt (both input as command confirmation). Defaults to '$ '.
-  _OK_VERBOSE     Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
-  _OK_PATH_TO_ME  The path ($_OK_PATH_TO_ME) to the location of this script (for internal use).\n"
+  _OK_C_HEADING      ${_OK_C_HEADING}Color-code${C_NC} for lines starting with a comment (heading). Defaults to red.
+  _OK_C_NUMBER       ${_OK_C_NUMBER}Color-code${C_NC} for numbering. Defaults to cyan.
+  _OK_C_COMMENT      ${_OK_C_COMMENT}Color-code${C_NC} for comments after commands. Defaults to blue.
+  _OK_C_COMMAND      ${_OK_C_COMMAND}Color-code${C_NC} for commands. Defaults to color-reset.
+  _OK_C_PROMPT       ${_OK_C_PROMPT}Color-code${C_NC} for prompt (both input as command confirmation). Defaults to color for numbering.
+environment variables (other configuration):
+  _OK_PROMPT         String ($p) used as prompt (both input as command confirmation). Defaults to '$ '.
+  _OK_PROMPT_DEFAULT Setting ($l) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
+  _OK_VERBOSE        Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
+environment variables (for internal use):
+  _OK_LAST_PWD       Remember the path ($_OK_LAST_PWD) that was last listed, for use with the list-once command.
+  _OK_PATH_TO_ME     The path ($_OK_PATH_TO_ME) to the location of this script.\n"
         fi
         if [[ -n $1 ]]; then
             echo -e "$1\n"
@@ -100,7 +109,7 @@ environment variables (other):
     local cmd=list
     local line_nr=0
     local once_check=0
-    local show_prompt=1
+    local show_prompt=${_OK_PROMPT_DEFAULT}
     local usage_error=
     local loop_args=1 #the Pascal-way to break loops
     while (( $# > 0 && $loop_args == 1 )) ; do

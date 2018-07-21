@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
-# tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/path/to/ok-bash/ok.sh"
+called=$_
+
+#basically, get the absolute path of this script (handy for loads of things)
+pushd "$(dirname "${BASH_SOURCE[@]}")" > /dev/null;
+_OK_PATH_TO_ME=$(pwd)
+popd > /dev/null;
+
 
 ok() {
     function _ok_cmd_usage {
@@ -31,7 +37,8 @@ script-arguments:
   _OK_C_PROMPT    ${_OK_C_PROMPT}Color-code${C_NC} for prompt (both input as command confirmation). Defaults to color for numbering.
 environment variables (other):
   _OK_PROMPT      String ($p) used as prompt (both input as command confirmation). Defaults to '$ '.
-  _OK_VERBOSE     Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.\n"
+  _OK_VERBOSE     Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
+  _OK_PATH_TO_ME  The path ($_OK_PATH_TO_ME) to the location of this script (for internal use).\n"
         fi
         if [[ -n $1 ]]; then
             echo -e "$1\n"
@@ -153,3 +160,9 @@ environment variables (other):
         fi
     fi
 }
+
+if [[ $called == $0 ]]; then
+    # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/path/to/ok-bash/ok.sh"
+    echo 'tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". '${_OK_PATH_TO_ME}'/ok.sh"'
+fi
+unset called

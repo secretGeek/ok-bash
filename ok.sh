@@ -46,7 +46,7 @@ environment variables (other configuration):
   _OK_PROMPT_DEFAULT Setting ($l) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
   _OK_VERBOSE        Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
 environment variables (for internal use):
-  _OK__LAST_PWD      Remember the path ($_OK_LAST_PWD) that was last listed, for use with the list-once command.
+  _OK__LAST_PWD      Remember the path ($_OK__LAST_PWD) that was last listed, for use with the list-once command.
   _OK__PATH_TO_ME    The path ($_OK__PATH_TO_ME) to the location of this script.\n"
         fi
         if [[ -n $1 ]]; then

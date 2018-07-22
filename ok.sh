@@ -3,7 +3,7 @@
 called=$_
 
 #basically, get the absolute path of this script (handy for loads of things)
-pushd "$(dirname "${BASH_SOURCE[@]}")" > /dev/null;
+pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null;
 _OK__PATH_TO_ME=$(pwd)
 popd > /dev/null;
 

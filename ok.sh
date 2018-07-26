@@ -181,6 +181,13 @@ environment variables (for internal use):
 if [[ $called == $0 ]]; then
     # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/path/to/ok-bash/ok.sh"
     echo 'tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". '${_OK__PATH_TO_ME}'/ok.sh"'
+    echo
+    echo "arguments, if you need to customize (these can also be set via arguments/environment):"
+    echo "  prompt <prompt> Use the supplied prompt (e.g. prompt '> ')"
+    echo "  prompt_default  Prompt default when issueing running ok without arguments"
+    echo "  verbose         Enable verbose mode"
+    echo "  quiet           Enable quiet mode"
+    echo
 else
     # Reset all used environment variables
     unset _OK_C_HEADING; unset _OK_C_NUMBER; unset _OK_C_COMMENT; unset _OK_C_COMMAND; unset _OK_C_PROMPT

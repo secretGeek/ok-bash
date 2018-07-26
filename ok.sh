@@ -108,7 +108,8 @@ environment variables (for internal use):
     if [ -z ${_OK_PROMPT+x} ];    then local PROMPT="$ ";               else local PROMPT=$_OK_PROMPT;       fi
     if [ -z ${_OK_VERBOSE+x} ];   then local verbose=1;                 else local verbose=$_OK_VERBOSE;     fi
 
-    # handle command line arguments first
+    # handle command line arguments now
+    local args="ok $@"              #preserve all arguments ($0 is '-bash', so hard-code function name)
     local re_is_num='^[1-9][0-9]*$' #numbers starting with "0" would be octal, and nobody knows those (also: sed on Linux complains about line "0")...
     local cmd=list
     local line_nr=0
@@ -151,6 +152,9 @@ environment variables (for internal use):
                     local re_num_begin='^[1-9][0-9]*($| )' # You can enter arguments at the ok-prompt too, hence different regex
                     read -p "${C_PROMPT}${PROMPT}${C_NC}" prompt_input
                     if [[ $prompt_input =~ $re_num_begin ]]; then
+                        #save command to history first
+                        history -s $args $prompt_input
+                        #execute command
                         eval _ok_cmd_run $prompt_input || return $?
                     else
                         if [[ $verbose -ge 2 ]]; then

@@ -181,5 +181,20 @@ environment variables (for internal use):
 if [[ $called == $0 ]]; then
     # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/path/to/ok-bash/ok.sh"
     echo 'tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". '${_OK__PATH_TO_ME}'/ok.sh"'
+else
+    # Reset all used environment variables
+    unset _OK_C_HEADING; unset _OK_C_NUMBER; unset _OK_C_COMMENT; unset _OK_C_COMMAND; unset _OK_C_PROMPT
+    unset _OK_PROMPT; unset _OK_PROMPT_DEFAULT; unset _OK_VERBOSE; unset _OK__LAST_PWD
+    # Process some installation helpers
+    while (( $# > 0 )) ; do
+        case $1 in
+            prompt) if [[ $# -ge 2 ]]; then export _OK_PROMPT=$2; shift; else echo "the prompt argument needs the actual prompt as 2nd argument"; fi;;
+            prompt_default) export _OK_PROMPT_DEFAULT=1;;
+            verbose)        export _OK_VERBOSE=2;;
+            quiet)          export _OK_VERBOSE=0;;
+            *) echo "Ignoring unknown argument '$1'";;
+        esac
+        shift
+    done
 fi
 unset called

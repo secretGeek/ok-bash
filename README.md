@@ -2,7 +2,7 @@
 
 ## "ok" gives you `.ok` folder profiles for bash
 
-💡 Tip: "." (i.e. dot source) the `ok.sh` script from your profile (.bashrc), e.g:
+💡 Tip: "." (i.e. dot source) the `ok.sh` script from your profile (such as `.bashrc`), i.e.:
 
     . ~/ok.sh
 

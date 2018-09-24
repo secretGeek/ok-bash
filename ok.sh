@@ -139,9 +139,10 @@ environment variables (for internal use):
         fi
         shift
     done
-    
-    # if there is a file called .ok...
-    if [ -f .ok ]; then
+
+    if [[ $cmd == usage ]]; then
+        _ok_cmd_usage "$usage_error" || return $?
+    elif [ -f .ok ]; then     # if there is a file called .ok...
         if [[ $cmd == run ]]; then
             _ok_cmd_run $line_nr "$@" || return $?
         elif [[ $cmd == list ]]; then
@@ -170,8 +171,6 @@ environment variables (for internal use):
             if [[ $verbose -ge 2 && $once_check == 1 && $_OK__LAST_PWD == $(pwd) ]]; then
                 echo "The listing for this folder has already been shown"
             fi
-        elif [[ $cmd == usage ]]; then
-            _ok_cmd_usage "$usage_error" || return $?
         fi
     else
         if [[ $verbose -ge 2 ]]; then

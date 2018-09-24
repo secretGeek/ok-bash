@@ -157,6 +157,9 @@ environment variables (for internal use):
                         #execute command
                         eval _ok_cmd_run $prompt_input || return $?
                     else
+                        if [[ -z $prompt_input || $prompt_input = "0" ]]; then
+                            return 0
+                        fi
                         if [[ $verbose -ge 2 ]]; then
                             >&2 echo "ERROR: input '$prompt_input' does not start with a number"
                         fi

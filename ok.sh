@@ -170,7 +170,6 @@ environment variables (for internal use):
             if [[ $verbose -ge 2 && $once_check == 1 && $_OK__LAST_PWD == $(pwd) ]]; then
                 echo "The listing for this folder has already been shown"
             fi
-            export _OK__LAST_PWD=$(pwd)
         elif [[ $cmd == usage ]]; then
             _ok_cmd_usage "$usage_error" || return $?
         fi
@@ -179,6 +178,7 @@ environment variables (for internal use):
             echo "Nothing to do: this folder doesn't have an '.ok' file"
         fi
     fi
+    export _OK__LAST_PWD=$(pwd)
 }
 
 if [[ $called == $0 ]]; then

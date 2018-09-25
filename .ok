@@ -13,4 +13,4 @@ echo "All passed arguments: [$*]"                                          # not
 
 ok help --verbose                                                          # Show help page of 🆗, including environment variables        
 set | grep "^_OK_"                                                         # Show all set environment variables, used with ok-bash        
-alias SSH='ok -v -f ~/.ssh/.ok'                                            # Keep a list of all your `ssh` connections; use it via `SSH`  
+alias SSH='ok -v -f ~/.ssh/.ok -a SSH'                                     # Keep a list of all your `ssh` connections; use it via `SSH`  

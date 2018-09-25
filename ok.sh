@@ -20,17 +20,18 @@ ok() {
        ok command [options]
 
 command (use one):
-  <number>          Run the <number>th command from the '.ok' file.
-  l, list           Show the list from the '.ok' file.$list_default
-  L, list-once      Same as list, but only show when pwd is different from when the list was last shown.
-  p, list-prompt    Show the list and wait for input at the ok-prompt (like --list and <number> in one command).$list_prompt_default
-  h, help           Show this usage page.
+  <number>            Run the <number>th command from the '.ok' file.
+  l, list             Show the list from the '.ok' file.$list_default
+  L, list-once        Same as list, but only show when pwd is different from when the list was last shown.
+  p, list-prompt      Show the list and wait for input at the ok-prompt (like --list and <number> in one command).$list_prompt_default
+  h, help             Show this usage page.
 options:
-  -v, --verbose     Show more output, most of the time to stderr.
-  -q, --quiet       Only show really necessary output.
-  -f, --file <file> Use a custom file instead of '.ok'.
+  -v, --verbose       Show more output, most of the time to stderr.
+  -q, --quiet         Only show really necessary output.
+  -f, --file <file>   Use a custom file instead of '.ok'.
+  -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
 script-arguments:
-  ...               These are passed through, when a line is executed (you can enter these too at the ok-prompt)\\n"
+  ...                 These are passed through, when a line is executed (you can enter these too at the ok-prompt)\\n"
 
         if [[ $verbose -ge 2 ]]; then
             if [ -z ${_OK_PROMPT+x} ];         then local p="unset";  else local p="'$_OK_PROMPT'"; fi
@@ -111,7 +112,12 @@ environment variables (for internal use):
 
     # handle command line arguments now
     local ok_file=".ok"
-    local args="ok $*"              #preserve all arguments ($0 is '-bash', so hard-code function name)
+    local args # Make sure no double space is added
+    if [[ -z "$*" ]]; then
+        args="ok"
+    else
+        args="ok $*"
+    fi
     local re_is_num='^[1-9][0-9]*$' #numbers starting with "0" would be octal, and nobody knows those (also: sed on Linux complains about line "0")...
     local cmd=list
     local line_nr=0
@@ -136,7 +142,8 @@ environment variables (for internal use):
                 -\? | -h | --help) cmd=usage;;
                 -v | --verbose)    verbose=2;;
                 -q | --quiet)      verbose=0;;
-                -f | --file)       if [[ $# -gt 1 && -f "$2" ]]; then ok_file="$2"; shift; else _ok_cmd_usage "No file provided, or file does not exist ($2)" || return $?; fi;;
+                -f | --file)       if [[ $# -gt 1 && -r "$2" ]]; then ok_file="$2"; shift; else _ok_cmd_usage "No file provided, or file is not readable ($2)" || return $?; fi;;
+                -a | --alias)      if [[ $# -gt 1 && -n "$2" ]]; then args="$2"; shift; else _ok_cmd_usage "Empty or no alias provided" || return $?; fi;;
                 *)                 cmd=usage; usage_error="Unknown command/option '$1'";;
             esac
         fi
@@ -145,7 +152,7 @@ environment variables (for internal use):
 
     if [[ $cmd == usage ]]; then
         _ok_cmd_usage "$usage_error" || return $?
-    elif [ -f "$ok_file" ]; then
+    elif [ -r "$ok_file" ]; then
         if [[ $cmd == run ]]; then
             _ok_cmd_run "$line_nr" "$@" || return $?
         elif [[ $cmd == list ]]; then
@@ -157,7 +164,7 @@ environment variables (for internal use):
                     read -rp "${c_prompt}${prompt}${c_nc}" prompt_input
                     if [[ $prompt_input =~ $re_num_begin ]]; then
                         #save command to history first
-                        history -s "$args" "$prompt_input"
+                        history -s "$args $prompt_input"
                         #execute command
                         eval _ok_cmd_run "$prompt_input" || return $?
                     else
@@ -177,7 +184,7 @@ environment variables (for internal use):
         fi
     else
         if [[ $verbose -ge 2 ]]; then
-            echo "Nothing to do: this folder doesn't have a '$ok_file' file"
+            echo "Nothing to do: this folder doesn't have a readable '$ok_file' file"
         fi
     fi
     export _OK__LAST_PWD=$(pwd)

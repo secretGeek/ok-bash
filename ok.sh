@@ -84,14 +84,14 @@ environment variables (for internal use):
         # determine number of command lines
         nr_lines=$(grep -Ec "^[^#]" < "$ok_file")
 
-        # list the content of the file, with a number (1-based) before each line,
-        # except lines starting with a "#", those are printed red without a number) as headers
+        # list the content of the file, with a number (1-based) before each line, except lines starting with a
+        # (optionally indented) "#", those are printed red without a number) as headers. Empty lines are headers too.
         awk -v h="$c_heading" -v n="$c_number" -v c="$c_comment" -v m="$c_command" -v x="$c_nc" -v P="${#nr_lines}" $'
-            $0 ~ /^(#|$)/ {
+            $0 ~ /^[ \\t]*(#|$)/ {
                 #print the (sub-)headings and/or empty lines
                 print x h $0 x;
             }
-            $0 ~ /^[^#]/ {
+            $0 ~ /^[ \\t]*[^# \\t]/ {
                 #print the commands
                 sub(/#/,c "#");
                 NR = sprintf("%" P "d.", ++i);

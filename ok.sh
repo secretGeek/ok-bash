@@ -203,6 +203,7 @@ if [[ "$called" == "$0" ]]; then
         echo -e "tip: \".\" (i.e. source) this file from your profile (.bashrc), e.g. \". ${_OK__PATH_TO_ME/$HOME/~}/ok.sh <arguments>\"
 
 arguments, if you need to customize (these can also be set via arguments/environment):
+  reset            Reset (unset) all environment variables (\$_OK_*) and will undo  'auto_show' if set (can modify \$PROMPT_COMMAND)
   prompt <prompt>  Use the supplied prompt (e.g. prompt '> ')
   prompt_default   Prompt default when issueing running ok without arguments
   auto_show        Perform 'ok list-once' every time the prompt is shown (modifies \$PROMPT_COMMAND)
@@ -210,19 +211,18 @@ arguments, if you need to customize (these can also be set via arguments/environ
   quiet            Enable quiet mode\\n"
     fi
 else
-    # Reset all used environment variables
-    unset _OK_C_HEADING; unset _OK_C_NUMBER; unset _OK_C_COMMENT; unset _OK_C_COMMAND; unset _OK_C_PROMPT
-    unset _OK_PROMPT; unset _OK_PROMPT_DEFAULT; unset _OK_VERBOSE; unset _OK__LAST_PWD
     # Process some installation helpers
     re_list_once=$'ok list-once'
     while (( $# > 0 )) ; do
         case $1 in
-            prompt) if [[ $# -ge 2 ]]; then export _OK_PROMPT=$2; shift; else echo "the prompt argument needs the actual prompt as 2nd argument"; fi;;
+            reset)          unset _OK_C_HEADING; unset _OK_C_NUMBER; unset _OK_C_COMMENT; unset _OK_C_COMMAND; unset _OK_C_PROMPT
+                            unset _OK_PROMPT; unset _OK_PROMPT_DEFAULT; unset _OK_VERBOSE; unset _OK__LAST_PWD
+                            if [[ $PROMPT_COMMAND =~ $re_list_once ]]; then export PROMPT_COMMAND="${PROMPT_COMMAND/$'\n'$re_list_once/}"; fi;;
+            prompt)         if [[ $# -ge 2 ]]; then export _OK_PROMPT=$2; shift; else echo "the prompt argument needs the actual prompt as 2nd argument"; fi;;
             prompt_default) export _OK_PROMPT_DEFAULT=1;;
             verbose)        export _OK_VERBOSE=2;;
             quiet)          export _OK_VERBOSE=0;;
-            auto_show)      if [[ ! $PROMPT_COMMAND =~ $re_list_once ]]; then export PROMPT_COMMAND="$PROMPT_COMMAND
-$re_list_once"; fi;;
+            auto_show)      if [[ ! $PROMPT_COMMAND =~ $re_list_once ]]; then export PROMPT_COMMAND="${PROMPT_COMMAND}"$'\n'"${re_list_once}"; fi;;
             *) echo "Ignoring unknown argument '$1'";;
         esac
         shift

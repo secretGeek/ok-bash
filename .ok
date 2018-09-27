@@ -11,6 +11,7 @@ _OK_PROMPT="% "; _OK_VERBOSE=0; _OK_PROMPT_DEFAULT=0        # Show ancient promp
 echo "Passed arguments: 1:[$1], 2:[$2], 3:[$3], 4+:[${*:4}] (nr args: $#)" # Comment-color starts too early; clearly a bug (so better  
 echo "All passed arguments: [$*]"                                          # not to use a number sign in a command for now)...         
 
-ok help --verbose                                                          # Show help page of 🆗, including environment variables        
-set | grep "^_OK_"                                                         # Show all set environment variables, used with ok-bash        
-alias SSH='ok -v -f ~/.ssh/.ok -a SSH'                                     # Keep a list of all your `ssh` connections; use it via `SSH`  
+ok help --verbose                                                          # Show help page of 🆗, including environment variables                  
+set | grep "^_OK_"                                                         # Show all set environment variables, used with ok-bash                  
+echo -e "$PROMPT_COMMAND"                                                  # This variable can be changed with the reset/auto_show install helpers  
+alias SSH='ok -v -f ~/.ssh/.ok -a SSH'                                     # Keep a list of all your `ssh` connections; use it via `SSH`            

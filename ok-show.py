@@ -11,7 +11,23 @@ def get_env(name, default):
 def cprint(color, text=''):
     print(color+text, end='')
 
-def print_line(line):
+def create_comment_pos_list(lines):
+    result = []
+    for line in lines:
+        heading_match=re_heading.search(line)
+        if heading_match:
+            result.append(heading_match.start(1))
+        elif re_whitespace.search(line):
+            result.append(-1)
+        else:
+            comment_match = re_comment.search(line)
+            if comment_match:
+                result.append(comment_match.start())
+            else:
+                result.append(-1)
+    return result
+
+def print_line(line, comment_pos):
     global line_nr
     if re_heading.search(line):
         if args.only_line_nr is not None: 
@@ -36,7 +52,8 @@ def print_line(line):
         if match:
             pos = match.start()
             cprint(c_command, line[:pos])
-            cprint(c_comment, line[pos:])
+            indent = ' '*(comment_pos-pos)
+            cprint(c_comment, indent+line[pos:])
         else:
             cprint(c_command, line)
     cprint(c_nc)
@@ -64,8 +81,9 @@ args = parser.parse_args()
 lines = sys.stdin.readlines()
 line_nr = 0
 nr_positions_line_nr = len(str(len(lines)))
+comment_pos_list = create_comment_pos_list(lines)
 for line in lines:
-    print_line(line)
+    print_line(line, max(comment_pos_list))
 
 # http://www.apeth.com/nonblog/stories/textmatebundle.html
 # https://github.com/stedolan/jq/wiki/Docs-for-Oniguruma-Regular-Expressions-(RE.txt)

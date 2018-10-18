@@ -16,15 +16,15 @@ def create_comment_pos_list(lines):
     for line in lines:
         heading_match=re_heading.search(line)
         if heading_match:
-            result.append(heading_match.start(1))
+            result.append(heading_match.start(1)*-1)
         elif re_whitespace.search(line):
-            result.append(-1)
+            result.append(None)
         else:
             comment_match = re_comment.search(line)
             if comment_match:
                 result.append(comment_match.start())
             else:
-                result.append(-1)
+                result.append(None)
     return result
 
 def print_line(line, comment_pos):
@@ -52,14 +52,14 @@ def print_line(line, comment_pos):
         if match:
             pos = match.start()
             cprint(c_command, line[:pos])
-            indent = ' '*(comment_pos-pos)
+            indent = ' '*(comment_pos-pos) if args.only_line_nr is None else ''
             cprint(c_comment, indent+line[pos:])
         else:
             cprint(c_command, line)
     cprint(c_nc)
     return
 
-re_heading = re.compile('^[ \t]*#')
+re_heading = re.compile('^[ \t]*(#)')
 re_whitespace = re.compile('^[ \t]*$')
 re_comment = re.compile('(^[ \t]+)?(?<!\S)(?=#)(?!#\{)')
 # used for colored output
@@ -72,9 +72,13 @@ c_prompt  = get_env('_OK_C_PROMPT',  c_number)
 # other customizations
 prompt    = get_env('_OK_PROMPT',  '$ ')
 verbose   = get_env('_OK_VERBOSE',  1)
+elastic_tab = get_env('_OK_ELASTIC_TAB', 0) # 0:none, 1: sync consecutive commenst, 2: sync all comments
+#OPTION FOR IGNORING VERY FAR INDENTED COMMENTS IF IT'S ONLY ONE OR TWO. NO INDENT OR POSSIBLY "HANING INDENT"
+#OPTION FOR RIGHT PADDING COMMENTS WITH SPACES, WHEN BACKGROUND COLOR HAS BEEN ADDED (both headings and comments)
+
 #arguments
 parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--line-only', action='store_true', default=False, help='Do not show prompt or colors with N')
+parser.add_argument('--line-only', '-l', action='store_true', default=False, help='Do not show prompt or colors with N')
 parser.add_argument('only_line_nr', metavar='N', type=int, nargs='?', help='the line number to show')
 args = parser.parse_args()
 
@@ -85,9 +89,13 @@ comment_pos_list = create_comment_pos_list(lines)
 for line in lines:
     print_line(line, max(comment_pos_list))
 
-# http://www.apeth.com/nonblog/stories/textmatebundle.html
-# https://github.com/stedolan/jq/wiki/Docs-for-Oniguruma-Regular-Expressions-(RE.txt)
 '''
+Parsing of comments is not yet perfect. It's also quite complicated. 
+See also:
+   http://www.apeth.com/nonblog/stories/textmatebundle.html
+   https://github.com/stedolan/jq/wiki/Docs-for-Oniguruma-Regular-Expressions-(RE.txt)
+
+Some notes:
 In what parts of a bash-line can a #-sign occur:
     - comment
     - interpolation:

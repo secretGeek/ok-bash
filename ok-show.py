@@ -45,25 +45,22 @@ def set_indent(l, start, stop, max_pos):
 
 def format_lines(l, elastic_tab):
     if elastic_tab == 0: return
-    if elastic_tab == 1 or elastic_tab == 2:
-        first_code_pos = None
-        for i in range(0, len(l)):
-            x = l[i]
-            if first_code_pos is None: #find the first line of a code-block
-                if x.t == 'code':
-                    first_code_pos = i
-                    max_pos = x.pos
-            if first_code_pos is not None:
-                if x.t == 'code' or (x.t == 'whitespace' and elastic_tab == 2):
-                    if x.t == 'code':
-                        max_pos = max(max_pos, x.pos)
-                    # Test if this is the last line in the block
-                    if i+1 >= len(l) or (elastic_tab == 1 and l[i+1].t != 'code') or (elastic_tab == 2 and l[i+1].t != 'code' and l[i+1].t != 'whitespace'):
-                        set_indent(l, first_code_pos, i+1, max_pos)
-                        first_code_pos = None #reset start code-block
-    elif elastic_tab == 3:
-        max_pos = max([x.pos for x in l if x.t == 'code'])
-        set_indent(l, 0, len(l), max_pos)
+    if elastic_tab == 1: group_reset = ['heading','whitespace']
+    if elastic_tab == 2: group_reset = ['heading']
+    if elastic_tab == 3: group_reset = []
+    start_group = None
+    for i in range(0, len(l)):
+        x = l[i]
+        if start_group is None and x.t not in group_reset:
+            start_group = i
+            max_pos = x.pos
+        if start_group is not None: # We are in a group
+            if x.t == 'code':
+                max_pos = max(max_pos, x.pos)
+            has_no_next_item = i+1>=len(l)
+            if has_no_next_item or l[i+1].t in group_reset:
+                set_indent(l, start_group, i+1, max_pos)
+                start_group = None #reset start code-block
 
 def print_line(l, nr_positions_line_nr, format_line):
     if l.t == 'heading':
@@ -76,12 +73,12 @@ def print_line(l, nr_positions_line_nr, format_line):
             if l.pos is None:
                 cprint(c_command, line)
             else:
-                #cprint(c_nc, '{}:{}:'.format(l.pos, l.indent))
                 cprint(c_command, l.line[:l.pos])
                 cprint(c_nc, ' '*l.indent)
                 cprint(c_comment, l.line[l.pos:])
         else:
             cprint(c_nc, l.line)
+
 
 re_heading = re.compile('^[ \t]*(#)')
 re_whitespace = re.compile('^[ \t]*$')
@@ -96,12 +93,13 @@ c_prompt  = get_env('_OK_C_PROMPT',  c_number)
 # other customizations
 prompt    = get_env('_OK_PROMPT',  '$ ')
 verbose   = get_env('_OK_VERBOSE',  1)
-elastic_tab = get_env('_OK_ELASTIC_TAB', 1) # 0:none, 1: sync consecutive commenst, 2: same, but whitespace also syncs (headline breaks sync) 3: sync all comments
+elastic_tab = int(get_env('_OK_ELASTIC_TAB', 1)) # 0:none, 1: sync consecutive commenst, 2: same, but whitespace also syncs (headline breaks sync) 3: sync all comments
+if elastic_tab<0 or elastic_tab>3: elastic_tab=0
 #OPTION FOR IGNORING VERY FAR INDENTED COMMENTS IF IT'S ONLY ONE OR TWO. NO INDENT OR POSSIBLY "HANING INDENT"
 #OPTION FOR RIGHT PADDING COMMENTS WITH SPACES, WHEN BACKGROUND COLOR HAS BEEN ADDED (both headings and comments)
 
 #arguments
-parser = argparse.ArgumentParser(description='Process some integers.')
+parser = argparse.ArgumentParser(description='Show the ok-file colorized (or just one line).')
 parser.add_argument('--line-only', '-l', action='store_true', default=False, help='Do not show prompt or colors with N')
 parser.add_argument('only_line_nr', metavar='N', type=int, nargs='?', help='the line number to show')
 args = parser.parse_args()

@@ -34,6 +34,7 @@ script-arguments:
   ...                 These are passed through, when a line is executed (you can enter these too at the ok-prompt)\\n"
 
         if [[ $verbose -ge 2 ]]; then
+            if [ -z ${_OK_COMMENT_ALIGN+x} ];  then local e="unset";  else local e="$_OK_COMMENT_ALIGN"; fi
             if [ -z ${_OK_PROMPT+x} ];         then local p="unset";  else local p="'$_OK_PROMPT'"; fi
             if [ -z ${_OK_VERBOSE+x} ];        then local v="unset";  else local v="$_OK_VERBOSE"; fi
             if [ -z ${_OK_PROMPT_DEFAULT+x} ]; then local l="unset";  else local l="$_OK_PROMPT_DEFAULT"; fi
@@ -44,6 +45,7 @@ script-arguments:
   _OK_C_COMMAND      ${_OK_C_COMMAND}Color-code${c_nc} for commands. Defaults to color-reset.
   _OK_C_PROMPT       ${_OK_C_PROMPT}Color-code${c_nc} for prompt (both input as command confirmation). Defaults to color for numbering.
 environment variables (other configuration):
+  _OK_COMMENT_ALIGN  Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines, 2=including whitespace, 3 align all. Defaults to 1.
   _OK_PROMPT         String ($p) used as prompt (both input as command confirmation). Defaults to '$ '.
   _OK_PROMPT_DEFAULT Setting ($l) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
   _OK_VERBOSE        Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
@@ -63,11 +65,11 @@ environment variables (for internal use):
         local line_nr=$1 #LINE_NR is guaranteed to be 1 or more
         shift
         # get the line to be executed
-        local line_text=$(grep -vE "^(#|$)" < "$ok_file" | sed "${line_nr}"'!d' )
-        if [[ -n $line_text ]]; then
+        local line_text="$("${_OK__PATH_TO_ME}/ok-show.py" --line-only "$line_nr" < "$ok_file")"
+        if [[ -n "$line_text" ]]; then
             if [[ $verbose -ge 1 ]]; then
                 # output the command first
-                echo -e "${c_prompt}${prompt}${c_command}${line_text}${c_nc}" | sed -E "s/(#.*)\$/${c_comment}\\1/1"
+                "${_OK__PATH_TO_ME}/ok-show.py" "$line_nr" < "$ok_file"
             fi
             # finally execute the line
             eval "$line_text"
@@ -81,34 +83,19 @@ environment variables (for internal use):
 
     function _ok_cmd_list {
         unset -f _ok_cmd_list
-        # determine number of command lines
-        nr_lines=$(grep -Ec "^[^#]" < "$ok_file")
 
-        # list the content of the file, with a number (1-based) before each line, except lines starting with a
-        # (optionally indented) "#", those are printed red without a number) as headers. Empty lines are headers too.
-        awk -v h="$c_heading" -v n="$c_number" -v c="$c_comment" -v m="$c_command" -v x="$c_nc" -v P="${#nr_lines}" $'
-            NR == 1 {
-                #handle UTF-8 BOMs: https://stackoverflow.com/a/1068700/56
-                sub(/^\\xEF\\xBB\\xBF/,"")
-            }
-            $0 ~ /^[ \\t]*(#|$)/ {
-                #print the (sub-)headings and/or empty lines
-                print x h $0 x;
-            }
-            $0 ~ /^[ \\t]*[^# \\t]/ {
-                #print the commands
-                sub(/#/,c "#");
-                NR = sprintf("%" P "d.", ++i);
-                print x n NR m " " $0 x;
-            }' < "$ok_file"
+        "${_OK__PATH_TO_ME}/ok-show.py" < "$ok_file"
     }
 
+    # export variables because python is a sub-process
+    for x in $(set | grep "^_OK_" | awk -F '=' '{print $1}'); do 
+        export "$x"="${!x}"
+    done
+
     # used for colored output (see: https://stackoverflow.com/a/20983251/56)
+    # notice: this is partly a duplication from code in ok-show.py
     local c_nc=$(tput sgr 0)
-    if [ -z ${_OK_C_HEADING+x} ]; then local c_heading=$(tput setaf 1); else local c_heading=$_OK_C_HEADING; fi #HEADING defaults to RED
     if [ -z ${_OK_C_NUMBER+x} ];  then local c_number=$(tput setaf 6);  else local c_number=$_OK_C_NUMBER;   fi #NUMBER defaults to CYAN
-    if [ -z ${_OK_C_COMMENT+x} ]; then local c_comment=$(tput setaf 4); else local c_comment=$_OK_C_COMMENT; fi #COMMENT defaults to BLUE
-    if [ -z ${_OK_C_COMMAND+x} ]; then local c_command=$c_nc;           else local c_command=$_OK_C_COMMAND; fi #COMMAND defaults to NO COLOR
     if [ -z ${_OK_C_PROMPT+x} ];  then local c_prompt=$c_number;        else local c_prompt=$_OK_C_PROMPT;   fi #PROMPT defaults to same color as NUMBER
     # other customizations (some environment variables can be overridden by arguments)
     if [ -z ${_OK_PROMPT+x} ];    then local prompt="$ ";               else local prompt=$_OK_PROMPT;       fi

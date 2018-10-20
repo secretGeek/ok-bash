@@ -14,7 +14,11 @@ class ParsedLine:
         self.indent = 0
 
 def get_env(name, default):
-    return os.environ[name] if name in os.environ else default
+    val = os.environ[name] if name in os.environ else default
+    if type(default)==int:
+        try: val=int(val)
+        except: val=default
+    return val
 
 def cprint(color, text=''):
     print(color+text, end='')
@@ -76,8 +80,9 @@ def print_line(l, nr_positions_line_nr, format_line):
                 cprint(c_command, l.line[:l.pos])
                 cprint(c_nc, ' '*l.indent)
                 cprint(c_comment, l.line[l.pos:])
+            cprint(c_nc, '')
         else:
-            cprint(c_nc, l.line)
+            print(l.line)
 
 
 re_heading = re.compile('^[ \t]*(#)')
@@ -91,10 +96,8 @@ c_comment = get_env('_OK_C_COMMENT', '\033[0;34m')
 c_command = get_env('_OK_C_COMMAND', c_nc)
 c_prompt  = get_env('_OK_C_PROMPT',  c_number)
 # other customizations
-prompt    = get_env('_OK_PROMPT',  '$ ')
-verbose   = get_env('_OK_VERBOSE',  1)
-elastic_tab = int(get_env('_OK_ELASTIC_TAB', 1)) # 0:none, 1: sync consecutive commenst, 2: same, but whitespace also syncs (headline breaks sync) 3: sync all comments
-if elastic_tab<0 or elastic_tab>3: elastic_tab=0
+comment_align = get_env('_OK_COMMENT_ALIGN', 1)
+if comment_align<0 or comment_align>3: comment_align=0
 #OPTION FOR IGNORING VERY FAR INDENTED COMMENTS IF IT'S ONLY ONE OR TWO. NO INDENT OR POSSIBLY "HANING INDENT"
 #OPTION FOR RIGHT PADDING COMMENTS WITH SPACES, WHEN BACKGROUND COLOR HAS BEEN ADDED (both headings and comments)
 
@@ -107,14 +110,14 @@ args = parser.parse_args()
 lines = sys.stdin.readlines()
 p_lines = parse_lines(lines)
 nr_positions_line_nr = len(str(max([pl.line_nr for pl in p_lines if pl.line_nr])))
-format_lines(p_lines, elastic_tab)
+format_lines(p_lines, comment_align)
 
 if args.only_line_nr is None:
     for p_line in p_lines:
         print_line(p_line, nr_positions_line_nr, not args.line_only)
 else:
-    p_line = next(x for x in p_lines if x['t']=='code' and x['nr']==args.only_line_nr)
-    print_line(p_line, nr_positions_line_nr, args.line_only)
+    p_line = next(x for x in p_lines if x.t=='code' and x.line_nr==args.only_line_nr)
+    print_line(p_line, nr_positions_line_nr, not args.line_only)
     
 
 '''

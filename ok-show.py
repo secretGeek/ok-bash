@@ -5,59 +5,52 @@ from __future__ import print_function
 import argparse, os, re, sys
 
 
+class ParsedLine:
+    def __init__(self, t, line, pos=None, line_nr=None):
+        self.t = t
+        self.line = line
+        self.pos = pos
+        self.line_nr = line_nr
+
 def get_env(name, default):
     return os.environ[name] if name in os.environ else default
 
 def cprint(color, text=''):
     print(color+text, end='')
 
-def create_comment_pos_list(lines):
+def parse_lines(lines):
     result = []
+    line_nr = 0
     for line in lines:
         heading_match=re_heading.search(line)
         if heading_match:
-            result.append(heading_match.start(1)*-1)
+            result.append(ParsedLine('heading', line, pos=heading_match.start(1)))
         elif re_whitespace.search(line):
-            result.append(None)
+            result.append(ParsedLine('whitespace', line))
         else:
-            comment_match = re_comment.search(line)
-            if comment_match:
-                result.append(comment_match.start())
+            line_nr += 1
+            match = re_comment.search(line)
+            if match:
+                result.append(ParsedLine('code', line, line_nr=line_nr, pos=match.start()))
             else:
-                result.append(None)
+                result.append(ParsedLine('code', line, line_nr=line_nr))
     return result
 
-def print_line(line, comment_pos):
-    global line_nr
-    if re_heading.search(line):
-        if args.only_line_nr is not None: 
-            return
-        cprint(c_heading, line)
-    elif re_whitespace.search(line):
-        if args.only_line_nr is not None: 
-            return
-        cprint(c_nc, line)
-    else:
-        line_nr+=1
-        if args.only_line_nr is not None and args.only_line_nr != line_nr: 
-            return
-        if args.line_only:
-            print(line)
-            return
-        if args.only_line_nr is None:
-            cprint(c_number, '{:{}}. '.format(line_nr, nr_positions_line_nr))
+def print_line(l, nr_positions_line_nr, format_line):
+    if l.t == 'heading':
+        cprint(c_heading, l.line)
+    elif l.t == 'whitespace':
+        cprint(c_nc, l.line)
+    elif l.t == 'code':
+        if format_line:
+            cprint(c_number, '{:{}}. '.format(l.line_nr, nr_positions_line_nr))
+            if l.pos is None:
+                cprint(c_command, line)
+            else:
+                cprint(c_command, l.line[:l.pos])
+                cprint(c_comment, l.line[l.pos:])
         else:
-            cprint(c_prompt, prompt)
-        match = re_comment.search(line)
-        if match:
-            pos = match.start()
-            cprint(c_command, line[:pos])
-            indent = ' '*(comment_pos-pos) if args.only_line_nr is None else ''
-            cprint(c_comment, indent+line[pos:])
-        else:
-            cprint(c_command, line)
-    cprint(c_nc)
-    return
+            cprint(c_nc, l.line)
 
 re_heading = re.compile('^[ \t]*(#)')
 re_whitespace = re.compile('^[ \t]*$')
@@ -72,7 +65,7 @@ c_prompt  = get_env('_OK_C_PROMPT',  c_number)
 # other customizations
 prompt    = get_env('_OK_PROMPT',  '$ ')
 verbose   = get_env('_OK_VERBOSE',  1)
-elastic_tab = get_env('_OK_ELASTIC_TAB', 0) # 0:none, 1: sync consecutive commenst, 2: sync all comments
+elastic_tab = get_env('_OK_ELASTIC_TAB', 1) # 0:none, 1: sync consecutive commenst, 2: sync all comments
 #OPTION FOR IGNORING VERY FAR INDENTED COMMENTS IF IT'S ONLY ONE OR TWO. NO INDENT OR POSSIBLY "HANING INDENT"
 #OPTION FOR RIGHT PADDING COMMENTS WITH SPACES, WHEN BACKGROUND COLOR HAS BEEN ADDED (both headings and comments)
 
@@ -83,11 +76,16 @@ parser.add_argument('only_line_nr', metavar='N', type=int, nargs='?', help='the 
 args = parser.parse_args()
 
 lines = sys.stdin.readlines()
-line_nr = 0
-nr_positions_line_nr = len(str(len(lines)))
-comment_pos_list = create_comment_pos_list(lines)
-for line in lines:
-    print_line(line, max(comment_pos_list))
+p_lines = parse_lines(lines)
+nr_positions_line_nr = len(str(max([pl.line_nr for pl in p_lines if pl.line_nr])))
+
+if args.only_line_nr is None:
+    for p_line in p_lines:
+        print_line(p_line, nr_positions_line_nr, not args.line_only)
+else:
+    p_line = next(x for x in p_lines if x['t']=='code' and x['nr']==args.only_line_nr)
+    print_line(p_line, nr_positions_line_nr, args.line_only)
+    
 
 '''
 Parsing of comments is not yet perfect. It's also quite complicated. 

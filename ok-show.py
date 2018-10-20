@@ -11,6 +11,7 @@ class ParsedLine:
         self.line = line
         self.pos = pos
         self.line_nr = line_nr
+        self.indent = 0
 
 def get_env(name, default):
     return os.environ[name] if name in os.environ else default
@@ -36,6 +37,34 @@ def parse_lines(lines):
                 result.append(ParsedLine('code', line, line_nr=line_nr))
     return result
 
+def set_indent(l, start, stop, max_pos):
+    for i in range(start, stop):
+        item = l[i]
+        if item.t == 'code':
+            item.indent = max_pos - item.pos
+
+def format_lines(l, elastic_tab):
+    if elastic_tab == 0: return
+    if elastic_tab == 1 or elastic_tab == 2:
+        first_code_pos = None
+        for i in range(0, len(l)):
+            x = l[i]
+            if first_code_pos is None: #find the first line of a code-block
+                if x.t == 'code':
+                    first_code_pos = i
+                    max_pos = x.pos
+            if first_code_pos is not None:
+                if x.t == 'code' or (x.t == 'whitespace' and elastic_tab == 2):
+                    if x.t == 'code':
+                        max_pos = max(max_pos, x.pos)
+                    # Test if this is the last line in the block
+                    if i+1 >= len(l) or (elastic_tab == 1 and l[i+1].t != 'code') or (elastic_tab == 2 and l[i+1].t != 'code' and l[i+1].t != 'whitespace'):
+                        set_indent(l, first_code_pos, i+1, max_pos)
+                        first_code_pos = None #reset start code-block
+    elif elastic_tab == 3:
+        max_pos = max([x.pos for x in l if x.t == 'code'])
+        set_indent(l, 0, len(l), max_pos)
+
 def print_line(l, nr_positions_line_nr, format_line):
     if l.t == 'heading':
         cprint(c_heading, l.line)
@@ -47,7 +76,9 @@ def print_line(l, nr_positions_line_nr, format_line):
             if l.pos is None:
                 cprint(c_command, line)
             else:
+                #cprint(c_nc, '{}:{}:'.format(l.pos, l.indent))
                 cprint(c_command, l.line[:l.pos])
+                cprint(c_nc, ' '*l.indent)
                 cprint(c_comment, l.line[l.pos:])
         else:
             cprint(c_nc, l.line)
@@ -65,7 +96,7 @@ c_prompt  = get_env('_OK_C_PROMPT',  c_number)
 # other customizations
 prompt    = get_env('_OK_PROMPT',  '$ ')
 verbose   = get_env('_OK_VERBOSE',  1)
-elastic_tab = get_env('_OK_ELASTIC_TAB', 1) # 0:none, 1: sync consecutive commenst, 2: sync all comments
+elastic_tab = get_env('_OK_ELASTIC_TAB', 1) # 0:none, 1: sync consecutive commenst, 2: same, but whitespace also syncs (headline breaks sync) 3: sync all comments
 #OPTION FOR IGNORING VERY FAR INDENTED COMMENTS IF IT'S ONLY ONE OR TWO. NO INDENT OR POSSIBLY "HANING INDENT"
 #OPTION FOR RIGHT PADDING COMMENTS WITH SPACES, WHEN BACKGROUND COLOR HAS BEEN ADDED (both headings and comments)
 
@@ -78,6 +109,7 @@ args = parser.parse_args()
 lines = sys.stdin.readlines()
 p_lines = parse_lines(lines)
 nr_positions_line_nr = len(str(max([pl.line_nr for pl in p_lines if pl.line_nr])))
+format_lines(p_lines, elastic_tab)
 
 if args.only_line_nr is None:
     for p_line in p_lines:

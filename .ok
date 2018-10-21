@@ -9,7 +9,7 @@ _OK_PROMPT="% "; _OK_VERBOSE=0; _OK_PROMPT_DEFAULT=0; _OK_COMMENT_ALIGN=0 # Show
 
 # Tests arguments passing (you can pass arguments after <number>, both at the bash-prompt and the ok-prompt)
 echo "Passed arguments: 1:[$1], 2:[$2], 3:[$3], 4+:[${*:4}] (nr args: $#)" # Comment-color starts too early; clearly a bug (so better
-echo "All passed arguments: [$*]" # not to use a number sign in a command for now)...
+echo "All passed arguments (no comment on this line): [$*]"
 
 ok help --verbose # Show help page of 🆗, including environment variables
 set | grep "^_OK_" # Show all set environment variables, used with ok-bash

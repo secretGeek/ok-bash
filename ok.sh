@@ -45,7 +45,7 @@ script-arguments:
   _OK_C_COMMAND      ${_OK_C_COMMAND}Color-code${c_nc} for commands. Defaults to color-reset.
   _OK_C_PROMPT       ${_OK_C_PROMPT}Color-code${c_nc} for prompt (both input as command confirmation). Defaults to color for numbering.
 environment variables (other configuration):
-  _OK_COMMENT_ALIGN  Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines, 2=including whitespace, 3 align all. Defaults to 1.
+  _OK_COMMENT_ALIGN  Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
   _OK_PROMPT         String ($p) used as prompt (both input as command confirmation). Defaults to '$ '.
   _OK_PROMPT_DEFAULT Setting ($l) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
   _OK_VERBOSE        Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
@@ -183,6 +183,7 @@ arguments, if you need to customize (these can also be set via arguments/environ
   prompt <prompt>  Use the supplied prompt (e.g. prompt '> ')
   prompt_default   Prompt default when issueing running ok without arguments
   auto_show        Perform 'ok list-once' every time the prompt is shown (modifies \$PROMPT_COMMAND)
+  comment_align N  Level of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
   verbose          Enable verbose mode
   quiet            Enable quiet mode\\n"
     fi
@@ -192,10 +193,11 @@ else
     while (( $# > 0 )) ; do
         case $1 in
             reset)          unset _OK_C_HEADING; unset _OK_C_NUMBER; unset _OK_C_COMMENT; unset _OK_C_COMMAND; unset _OK_C_PROMPT
-                            unset _OK_PROMPT; unset _OK_PROMPT_DEFAULT; unset _OK_VERBOSE; unset _OK__LAST_PWD
+                            unset _OK_PROMPT; unset _OK_PROMPT_DEFAULT; unset _OK_VERBOSE; unset _OK__LAST_PWD; unset _OK_COMMENT_ALIGN
                             if [[ $PROMPT_COMMAND =~ $re_list_once ]]; then export PROMPT_COMMAND="${PROMPT_COMMAND/$'\n'$re_list_once/}"; fi;;
             prompt)         if [[ $# -ge 2 ]]; then export _OK_PROMPT=$2; shift; else echo "the prompt argument needs the actual prompt as 2nd argument"; fi;;
             prompt_default) export _OK_PROMPT_DEFAULT=1;;
+            comment_align)  if [[ $# -ge 2 ]]; then export _OK_COMMENT_ALIGN=$2; shift; else echo "the comment_align argument needs the actual prompt as 2nd argument"; fi;;
             verbose)        export _OK_VERBOSE=2;;
             quiet)          export _OK_VERBOSE=0;;
             auto_show)      if [[ ! $PROMPT_COMMAND =~ $re_list_once ]]; then export PROMPT_COMMAND="${PROMPT_COMMAND}"$'\n'"${re_list_once}"; fi;;

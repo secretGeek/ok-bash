@@ -13,6 +13,9 @@ class ParsedLine:
         self.line_nr = line_nr
         self.indent = 0
 
+    def set_indent(self, max_pos):
+        self.indent = max_pos - self.pos if self.pos and max_pos else 0
+
 class rx:
     heading    = re.compile('^[ \t]*(#)')
     whitespace = re.compile('^[ \t]*$')
@@ -49,17 +52,15 @@ def parse_lines(lines):
         else:
             line_nr += 1
             match = rx.comment.search(line)
-            if match:
-                result.append(ParsedLine('code', line, line_nr=line_nr, pos=match.start()))
-            else:
-                result.append(ParsedLine('code', line, line_nr=line_nr))
+            pos = match.start() if match else None
+            result.append(ParsedLine('code', line, line_nr=line_nr, pos=pos))
     return result
 
 def set_indent(l, start, stop, max_pos):
     for i in range(start, stop):
         item = l[i]
         if item.t == 'code':
-            item.indent = max_pos - item.pos
+            item.set_indent(max_pos)
 
 def format_lines(l, elastic_tab):
     if elastic_tab == 0: return
@@ -89,7 +90,7 @@ def print_line(l, clr, nr_positions_line_nr, format_line):
         if format_line:
             cprint(clr.number, '{:{}}. '.format(l.line_nr, nr_positions_line_nr))
             if l.pos is None:
-                cprint(clr.command, line)
+                cprint(clr.command, l.line)
             else:
                 cprint(clr.command, l.line[:l.pos])
                 cprint(clr.nc, ' '*l.indent)
@@ -112,6 +113,9 @@ def main():
 
     # prepare
     lines = sys.stdin.readlines()
+    #handle UTF-8 BOMs: https://stackoverflow.com/a/1068700/56
+    if re.match('\xEF\xBB\xBF', lines[0]):
+        lines[0] = lines[0][3:]
     p_lines = parse_lines(lines)
     nr_positions_line_nr = len(str(max([pl.line_nr for pl in p_lines if pl.line_nr])))
     format_lines(p_lines, comment_align)

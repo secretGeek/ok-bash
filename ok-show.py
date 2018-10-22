@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-import argparse, os, re, sys
+import argparse, codecs, os, re, sys
 
 
 class ParsedLine:
@@ -41,6 +41,9 @@ def cprint(color, text=''):
     print(color+text, end='')
 
 def parse_lines(lines):
+    #handle UTF-8 BOMs: https://stackoverflow.com/a/28407897/56
+    if lines[0][:3] == codecs.BOM_UTF8:
+        lines[0] = lines[0][3:]
     result = []
     line_nr = 0
     for line in lines:
@@ -113,9 +116,6 @@ def main():
 
     # prepare
     lines = sys.stdin.readlines()
-    #handle UTF-8 BOMs: https://stackoverflow.com/a/1068700/56
-    if re.match('\xEF\xBB\xBF', lines[0]):
-        lines[0] = lines[0][3:]
     p_lines = parse_lines(lines)
     nr_positions_line_nr = len(str(max([pl.line_nr for pl in p_lines if pl.line_nr])))
     format_lines(p_lines, comment_align)

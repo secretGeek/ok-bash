@@ -171,12 +171,16 @@ environment variables (for internal use):
 }
 
 if [[ "$called" == "$0" ]]; then
+    if [[ -z $(which python) ]]; then
+        >&2 echo "ERROR: python is required to run 'ok', but can't be found"
+        exit 1
+    fi
     if [[ $1 == "t" || $1 == "test" ]]; then
         shift
         ok "$@"
     else
         # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/path/to/ok-bash/ok.sh"
-        echo -e "tip: \".\" (i.e. source) this file from your profile (.bashrc), e.g. \". ${_OK__PATH_TO_ME/$HOME/~}/ok.sh <arguments>\"
+        echo -e "tip: \".\" (i.e. source) this file from your ~/.profile, e.g. \". ${_OK__PATH_TO_ME/$HOME/~}/ok.sh <arguments>\"
 
 arguments, if you need to customize (these can also be set via arguments/environment):
   reset            Reset (unset) all environment variables (\$_OK_*) and will undo  'auto_show' if set (can modify \$PROMPT_COMMAND)

@@ -66,14 +66,14 @@ environment variables (for internal use):
         shift
         # get the line to be executed (swap stdout and stderr, since the to be executed line is shown on stderr, but we want to store it)
         local line_text
-        line_text="$("${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" "$line_nr" < "$ok_file" 3>&1 1>&2 2>&3)" || return $?
+        line_text="$("${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -t "$(tput cols)" "$line_nr" < "$ok_file" 3>&1 1>&2 2>&3)" || return $?
         eval "$line_text"
     }
 
     function _ok_cmd_list {
         unset -f _ok_cmd_list
 
-        "${_OK__PATH_TO_ME}/ok-show.py" < "$ok_file" || return $?
+        "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -t "$(tput cols)" < "$ok_file" || return $?
     }
 
     # export variables because python is a sub-process

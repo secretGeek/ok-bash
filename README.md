@@ -1,5 +1,4 @@
-﻿ok-bash
-=======
+﻿# ok-bash
 
 See <http://secretgeek.net/ok> for the blog post launching (and describing) "ok".
 

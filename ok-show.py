@@ -18,11 +18,11 @@ class ParsedLine:
     def rpad_to(self, max_width, nr_positions_line_nr):
         rpad_value = max_width - len(self.line) - self.indent
         self.rpad = rpad_value if rpad_value > 0 else 0
-        print('{}-rpad: {} (len:{}, indent:{}, nr_positions_line_nr:{})'.format(self.line_nr, rpad_value, len(self.line), self.indent, nr_positions_line_nr))
+        #print('{}-rpad: {} (len:{}, indent:{}, nr_positions_line_nr:{})'.format(self.line_nr, rpad_value, len(self.line), self.indent, nr_positions_line_nr))
 
     def set_indent(self, max_pos):
         self.indent = max_pos - self.pos if self.pos and max_pos else 0
-        print('{}=indent: {} (pos: {}, max_pos:{})'.format(self.line_nr, self.indent, self.pos, max_pos))
+        #print('{}=indent: {} (pos: {}, max_pos:{})'.format(self.line_nr, self.indent, self.pos, max_pos))
 
 class rx:
     heading    = re.compile('^[ \t]*(#)')
@@ -50,9 +50,9 @@ def cprint(color, text=''):
     if text:  print(text, end='')
 
 def parse_lines(lines):
-    #handle UTF-8 BOMs: https://stackoverflow.com/a/28407897/56
-    if lines[0][:3] == codecs.BOM_UTF8:
-        lines[0] = lines[0][3:]
+    #handle Unicode BOM after being decoded: https://stackoverflow.com/a/28407897/56 and https://stackoverflow.com/a/1068700/56
+    if ord(lines[0][0]) == 0xFEFF: # BOM_UTF16_BE
+        lines[0] = lines[0][1:]
     result = []
     line_nr = 0
     for line in lines:

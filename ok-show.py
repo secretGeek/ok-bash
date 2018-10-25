@@ -38,7 +38,8 @@ class ok_color:
         self.prompt  = get_env('_OK_C_PROMPT',  self.number)
 
 def cprint(color, text=''):
-    print(color+text, end='')
+    if color: print(color, end='')
+    if text:  print(text, end='')
 
 def parse_lines(lines):
     #handle UTF-8 BOMs: https://stackoverflow.com/a/28407897/56
@@ -47,6 +48,7 @@ def parse_lines(lines):
     result = []
     line_nr = 0
     for line in lines:
+        line = line.strip('\n')
         heading_match=rx.heading.search(line)
         if heading_match:
             result.append(ParsedLine('heading', line, pos=heading_match.start(1)))
@@ -87,8 +89,9 @@ def format_lines(l, elastic_tab):
 def print_line(l, clr, nr_positions_line_nr, format_line):
     if l.t == 'heading':
         cprint(clr.heading, l.line)
+        cprint(clr.nc, '\n')
     elif l.t == 'whitespace':
-        cprint(clr.nc, l.line)
+        cprint(clr.nc, l.line+'\n')
     elif l.t == 'code':
         if format_line:
             cprint(clr.number, '{:{}}. '.format(l.line_nr, nr_positions_line_nr))
@@ -96,9 +99,9 @@ def print_line(l, clr, nr_positions_line_nr, format_line):
                 cprint(clr.command, l.line)
             else:
                 cprint(clr.command, l.line[:l.pos])
-                cprint(clr.nc, ' '*l.indent)
+                cprint(None, ' '*l.indent)
                 cprint(clr.comment, l.line[l.pos:])
-            cprint(clr.nc, '')
+            cprint(clr.nc, '\n')
         else:
             print(l.line, file=sys.stderr)
 

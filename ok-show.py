@@ -143,6 +143,8 @@ def main():
         print('terminal_width:', args.terminal_width)
 
     # prepare
+    UTF8Reader = codecs.getreader('utf8')
+    sys.stdin = UTF8Reader(sys.stdin)
     lines = sys.stdin.readlines()
     p_lines = parse_lines(lines)
     nr_positions_line_nr = len(str(max([pl.line_nr for pl in p_lines if pl.line_nr])))

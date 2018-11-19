@@ -76,7 +76,7 @@ def set_indent(l, start, stop, max_pos):
         if item.t == 'code':
             item.set_indent(max_pos)
 
-def format_lines(l, elastic_tab, pad_comments, nr_positions_line_nr, max_width):
+def format_lines(l, elastic_tab, nr_positions_line_nr, max_width):
     if elastic_tab == 0: return
     if elastic_tab == 1: group_reset = ['heading','whitespace']
     if elastic_tab == 2: group_reset = ['heading']
@@ -94,13 +94,6 @@ def format_lines(l, elastic_tab, pad_comments, nr_positions_line_nr, max_width):
             if has_no_next_item or l[i+1].t in group_reset:
                 set_indent(l, start_group, i+1, max_pos)
                 start_group = None #reset start code-block
-    for i in range(0, len(l)):
-        x = l[i]
-        if pad_comments == 2 and x.t in ['code', 'heading']:
-            pad_value = max_width
-            if x.t == 'code':
-                pad_value = max_width - nr_positions_line_nr - 2
-            x.rpad_to(pad_value, nr_positions_line_nr)
 
 def print_line(l, clr, nr_positions_line_nr, format_line):
     if l.t == 'heading':
@@ -128,8 +121,6 @@ def main():
     clr = ok_color()
     comment_align = get_env('_OK_COMMENT_ALIGN', 1)
     if comment_align<0 or comment_align>3: comment_align=1
-    pad_comments = get_env('_OK_PAD_COMMENTS', 1)
-    if pad_comments<0 or pad_comments>2: pad_comments=1
 
     # handle arguments
     parser = argparse.ArgumentParser(description='Show the ok-file colorized (or just one line).')
@@ -140,7 +131,6 @@ def main():
 
     if args.verbose > 1:
         print('comment_align:', comment_align)
-        print('pad_comments:', pad_comments)
         print('terminal_width:', args.terminal_width)
 
     # prepare
@@ -149,7 +139,7 @@ def main():
     lines = sys.stdin.readlines()
     p_lines = parse_lines(lines)
     nr_positions_line_nr = len(str(max([pl.line_nr for pl in p_lines if pl.line_nr])))
-    format_lines(p_lines, comment_align, pad_comments, nr_positions_line_nr, args.terminal_width)
+    format_lines(p_lines, comment_align, nr_positions_line_nr, args.terminal_width)
 
     # execute
     if args.only_line_nr is None:

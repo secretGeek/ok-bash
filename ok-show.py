@@ -20,20 +20,33 @@ class ParsedLine:
         self.rpad = rpad_value if rpad_value > 0 else 0
         #print('{}-rpad: {} (len:{}, indent:{}, nr_positions_line_nr:{})'.format(self.line_nr, rpad_value, len(self.line), self.indent, nr_positions_line_nr))
 
-    def set_indent(self, max_pos):
-        self.indent = max_pos - self.pos if self.pos and max_pos else 0
-        #print('{}=indent: {} (pos: {}, max_pos:{})'.format(self.line_nr, self.indent, self.pos, max_pos))
+    def set_indent(self, max_pos, max_width):
+        if self.pos and max_pos:
+            self.indent = max_pos - self.pos
+            # if indent makes line wrap, indent less
+            line_wraps = len(self.line) > max_width
+            indent_wraps = len(self.line)+self.indent > max_width
+            #print('line_wraps:{}, indent_wraps:{}, room_available:{} -- '.format(line_wraps,  indent_wraps, max_width-len(self.line)), end='')
+            if not line_wraps and indent_wraps:
+                self.indent = max_width - len(self.line)
+        else:
+            self.indent = 0
+        #print('{}=indent: {} (pos: {}, max_pos:{}) [{}]'.format(self.line_nr, self.indent, self.pos, max_pos, self.line[:7]))
 
 class rx:
     heading    = re.compile('^[ \t]*(#)')
     whitespace = re.compile('^[ \t]*$')
     comment    = re.compile('(^[ \t]+)?(?<!\S)(?=#)(?!#\{)')
 
-def get_env(name, default):
+def get_env(name, default, legal_values=None):
     val = os.environ[name] if name in os.environ else default
     if type(default)==int:
-        try: val=int(val)
-        except: val=default
+        try: 
+            val=int(val)
+            if legal_values is not None and val not in legal_values:
+                val=default
+        except: 
+            val=default
     return val
 
 class ok_color:
@@ -70,11 +83,11 @@ def parse_lines(lines):
             result.append(ParsedLine('code', line, line_nr=line_nr, pos=pos))
     return result
 
-def set_indent(l, start, stop, max_pos):
+def set_indent(l, start, stop, max_pos, max_width):
     for i in range(start, stop):
         item = l[i]
         if item.t == 'code':
-            item.set_indent(max_pos)
+            item.set_indent(max_pos, max_width)
 
 def format_lines(l, elastic_tab, nr_positions_line_nr, max_width):
     if elastic_tab == 0: return
@@ -86,13 +99,14 @@ def format_lines(l, elastic_tab, nr_positions_line_nr, max_width):
         x = l[i]
         if start_group is None and x.t not in group_reset:
             start_group = i
-            max_pos = x.pos
+            max_pos = len(x.line)+1 if x.pos is None else x.pos
         if start_group is not None: # We are in a group
             if x.t == 'code':
                 max_pos = max(max_pos, x.pos)
             has_no_next_item = i+1>=len(l)
             if has_no_next_item or l[i+1].t in group_reset:
-                set_indent(l, start_group, i+1, max_pos)
+                max_command_width = max_width - nr_positions_line_nr - len('. ')
+                set_indent(l, start_group, i+1, max_pos, max_command_width)
                 start_group = None #reset start code-block
 
 def print_line(l, clr, nr_positions_line_nr, format_line):
@@ -119,8 +133,7 @@ def print_line(l, clr, nr_positions_line_nr, format_line):
 def main():
     # customizations
     clr = ok_color()
-    comment_align = get_env('_OK_COMMENT_ALIGN', 1)
-    if comment_align<0 or comment_align>3: comment_align=1
+    comment_align = get_env('_OK_COMMENT_ALIGN', 2, [0,1,2,3])
 
     # handle arguments
     parser = argparse.ArgumentParser(description='Show the ok-file colorized (or just one line).')

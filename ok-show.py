@@ -151,19 +151,22 @@ def main():
     sys.stdin = UTF8Reader(sys.stdin)
     lines = sys.stdin.readlines()
     p_lines = parse_lines(lines)
-    nr_positions_line_nr = len(str(max([pl.line_nr for pl in p_lines if pl.line_nr])))
+    cmd_lines = [pl.line_nr for pl in p_lines if pl.line_nr]
+    nr_positions_line_nr = len(str(max(cmd_lines))) if len(cmd_lines)>0 else 0
     format_lines(p_lines, comment_align, nr_positions_line_nr, args.terminal_width)
 
     # execute
     if args.only_line_nr is None:
         for p_line in p_lines:
             print_line(p_line, clr, nr_positions_line_nr, True)
+        if len(cmd_lines) == 0:
+            sys.exit(1)
     else:
         try:
             p_line = next(x for x in p_lines if x.t=='code' and x.line_nr==args.only_line_nr)
         except StopIteration:
             if args.verbose >= 2: print("ERROR: entered line number '{}' does not exist".format(args.only_line_nr))
-            sys.exit(1)
+            sys.exit(2)
         # The formated line is printed to stdout, and the actual line from .ok is printed to stderr
         if args.verbose >= 1: print_line(p_line, clr, nr_positions_line_nr, True)
         print_line(p_line, clr, nr_positions_line_nr, False)

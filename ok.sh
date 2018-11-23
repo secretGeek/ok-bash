@@ -28,7 +28,7 @@ command (use one):
 options:
   -v, --verbose       Show more output, most of the time to stderr.
   -q, --quiet         Only show really necessary output.
-  -f, --file <file>   Use a custom file instead of '.ok'.
+  -f, --file <file>   Use a custom file instead of '.ok'; use '-' for stdin
   -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
 script-arguments:
   ...                 These are passed through, when a line is executed (you can enter these too at the ok-prompt)\\n"
@@ -66,14 +66,14 @@ environment variables (for internal use):
         shift
         # get the line to be executed (swap stdout and stderr, since the to be executed line is shown on stderr, but we want to store it)
         local line_text
-        line_text="$("${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -t "$(tput cols)" "$line_nr" < "$ok_file" 3>&1 1>&2 2>&3)" || return $?
+        line_text="$(cat "$ok_file" | "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -t "$(tput cols)" "$line_nr" 3>&1 1>&2 2>&3)" || return $?
         eval "$line_text"
     }
 
     function _ok_cmd_list {
         unset -f _ok_cmd_list
 
-        "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -t "$(tput cols)" < "$ok_file" || return $?
+        cat "$ok_file" | "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -t "$(tput cols)" || return $?
     }
 
     # export variables because python is a sub-process
@@ -83,7 +83,7 @@ environment variables (for internal use):
 
     # used for colored output (see: https://stackoverflow.com/a/20983251/56)
     # notice: this is partly a duplication from code in ok-show.py
-    local c_nc=$(tput sgr 0)
+    local c_nc=$(tput sgr0)
     if [ -z ${_OK_C_NUMBER+x} ];  then local c_number=$(tput setaf 6);  else local c_number=$_OK_C_NUMBER;   fi #NUMBER defaults to CYAN
     if [ -z ${_OK_C_PROMPT+x} ];  then local c_prompt=$c_number;        else local c_prompt=$_OK_C_PROMPT;   fi #PROMPT defaults to same color as NUMBER
     # other customizations (some environment variables can be overridden by arguments)
@@ -122,7 +122,7 @@ environment variables (for internal use):
                 -\? | -h | --help) cmd=usage;;
                 -v | --verbose)    verbose=2;;
                 -q | --quiet)      verbose=0;;
-                -f | --file)       if [[ $# -gt 1 && -r "$2" ]]; then ok_file="$2"; shift; else _ok_cmd_usage "No file provided, or file is not readable ($2)" || return $?; fi;;
+                -f | --file)       if [[ $# -gt 1 && -r "$2" || "-" == "$2" ]]; then ok_file="$2"; shift; else _ok_cmd_usage "No file provided, or file is not readable ($2)" || return $?; fi;;
                 -a | --alias)      if [[ $# -gt 1 && -n "$2" ]]; then args="$2"; shift; else _ok_cmd_usage "Empty or no alias provided" || return $?; fi;;
                 *)                 cmd=usage; usage_error="Unknown command/option '$1'";;
             esac
@@ -132,13 +132,16 @@ environment variables (for internal use):
 
     if [[ $cmd == usage ]]; then
         _ok_cmd_usage "$usage_error" || return $?
-    elif [ -r "$ok_file" ]; then
+    elif [[ - == "$ok_file" || -r "$ok_file" ]]; then
         if [[ $cmd == run ]]; then
             _ok_cmd_run "$line_nr" "$@" || return $?
         elif [[ $cmd == list ]]; then
             if [[ $once_check == 0 || ($once_check == 1 && $_OK__LAST_PWD != $(pwd)) ]]; then
-                _ok_cmd_list || return $?
-                if [[ $show_prompt == 1 ]]; then
+                _ok_cmd_list
+                local list_result=$?
+                if [[ $list_result -gt 1 ]]; then
+                    return $list_result
+                elif [[ $show_prompt == 1 && $list_result == 0 ]]; then #only show prompt, if there where commands printed
                     local prompt_input
                     local re_num_begin='^[1-9][0-9]*($| )' # You can enter arguments at the ok-prompt too, hence different regex
                     read -rp "${c_prompt}${prompt}${c_nc}" prompt_input
@@ -171,7 +174,7 @@ environment variables (for internal use):
 }
 
 if [[ "$called" == "$0" ]]; then
-    if [[ -z $(which python) ]]; then
+    if [[ -z $(command -v python) ]]; then
         >&2 echo "ERROR: python is required to run 'ok', but can't be found"
         exit 1
     fi
@@ -210,5 +213,7 @@ else
         shift
     done
     unset re_list_once
+    #make ok available for scripts as well
+    export -f ok
 fi
 unset called

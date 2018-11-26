@@ -141,9 +141,14 @@ def main():
         print('comment_align:', comment_align)
         print('terminal_width:', args.terminal_width)
 
+    #setup UTF-8
+    if sys.stdin.encoding != 'UTF-8':
+        sys.stdin = codecs.getreader('utf8')(sys.stdin, 'strict')
+    if sys.stdout.encoding != 'UTF-8':
+        sys.stdout = codecs.getwriter('utf-8')(sys.stdout, 'strict')
+    if sys.stderr.encoding != 'UTF-8':
+        sys.stderr = codecs.getwriter('utf-8')(sys.stderr, 'strict')
     # prepare
-    UTF8Reader = codecs.getreader('utf8')
-    sys.stdin = UTF8Reader(sys.stdin)
     lines = sys.stdin.readlines()
     p_lines = parse_lines(lines)
     cmd_lines = [pl.line_nr for pl in p_lines if pl.line_nr]

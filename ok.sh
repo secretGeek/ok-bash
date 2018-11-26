@@ -76,7 +76,7 @@ environment variables (for internal use):
         cat "$ok_file" | "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -t "$(tput cols)" || return $?
     }
 
-    # export variables because python is a sub-process
+    # export variables because python is a sub-process, and variables might have changed since initialization
     for x in $(set | grep "^_OK_" | awk -F '=' '{print $1}'); do 
         export "$x"="${!x}"
     done
@@ -213,6 +213,10 @@ else
         shift
     done
     unset re_list_once
+    # export variables so `ok` can be used from scripts as well
+    for x in $(set | grep "^_OK_" | awk -F '=' '{print $1}'); do 
+        export "$x"="${!x}"
+    done
     #make ok available for scripts as well
     export -f ok
 fi

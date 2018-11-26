@@ -4,6 +4,9 @@
 from __future__ import print_function
 import argparse, codecs, os, re, sys
 
+def ansi_len(s):
+    no_ansi_s = rx.ansi_len.sub('', s)
+    return len(no_ansi_s)
 
 class ParsedLine:
     INDENT_CHAR=' '
@@ -13,30 +16,24 @@ class ParsedLine:
         self.pos = pos
         self.line_nr = line_nr
         self.indent = 0
-        self.rpad = 0
-
-    def rpad_to(self, max_width, nr_positions_line_nr):
-        rpad_value = max_width - len(self.line) - self.indent
-        self.rpad = rpad_value if rpad_value > 0 else 0
-        #print('{}-rpad: {} (len:{}, indent:{}, nr_positions_line_nr:{})'.format(self.line_nr, rpad_value, len(self.line), self.indent, nr_positions_line_nr))
 
     def set_indent(self, max_pos, max_width):
         if self.pos and max_pos:
             self.indent = max_pos - self.pos
             # if indent makes line wrap, indent less
-            line_wraps = len(self.line) > max_width
-            indent_wraps = len(self.line)+self.indent > max_width
-            #print('line_wraps:{}, indent_wraps:{}, room_available:{} -- '.format(line_wraps,  indent_wraps, max_width-len(self.line)), end='')
+            line_len = ansi_len(self.line)
+            line_wraps = line_len > max_width
+            indent_wraps = line_len+self.indent > max_width
             if not line_wraps and indent_wraps:
-                self.indent = max_width - len(self.line)
+                self.indent = max_width - line_len
         else:
             self.indent = 0
-        #print('{}=indent: {} (pos: {}, max_pos:{}) [{}]'.format(self.line_nr, self.indent, self.pos, max_pos, self.line[:7]))
 
 class rx:
     heading    = re.compile('^[ \t]*(#)')
     whitespace = re.compile('^[ \t]*$')
     comment    = re.compile('(^[ \t]+)?(?<!\S)(?=#)(?!#\{)')
+    ansi_len   = re.compile('\x1b\[.*?m')
 
 def get_env(name, default, legal_values=None):
     val = os.environ[name] if name in os.environ else default
@@ -50,7 +47,7 @@ def get_env(name, default, legal_values=None):
     return val
 
 class ok_color:
-    #TODO: iets met https://unix.stackexchange.com/questions/9957/how-to-check-if-bash-can-print-colors
+    #TODO: need to check if colors are supported? (https://unix.stackexchange.com/questions/9957/how-to-check-if-bash-can-print-colors)
     def __init__(self):
         self.nc      = '\033[0m'
         self.heading = get_env('_OK_C_HEADING', '\033[0;31m')
@@ -99,7 +96,7 @@ def format_lines(l, elastic_tab, nr_positions_line_nr, max_width):
         x = l[i]
         if start_group is None and x.t not in group_reset:
             start_group = i
-            max_pos = len(x.line)+1 if x.pos is None else x.pos
+            max_pos = ansi_len(x.line)+1 if x.pos is None else x.pos
         if start_group is not None: # We are in a group
             if x.t == 'code':
                 max_pos = max(max_pos, x.pos)
@@ -112,7 +109,6 @@ def format_lines(l, elastic_tab, nr_positions_line_nr, max_width):
 def print_line(l, clr, nr_positions_line_nr, format_line):
     if l.t == 'heading':
         cprint(clr.heading, l.line)
-        cprint(None, ParsedLine.INDENT_CHAR*l.rpad)
         cprint(clr.nc, '\n')
     elif l.t == 'whitespace':
         cprint(clr.nc, l.line+'\n')
@@ -125,7 +121,6 @@ def print_line(l, clr, nr_positions_line_nr, format_line):
                 cprint(clr.command, l.line[:l.pos])
                 cprint(None, ParsedLine.INDENT_CHAR*l.indent)
                 cprint(clr.comment, l.line[l.pos:])
-            cprint(None, ParsedLine.INDENT_CHAR*l.rpad)
             cprint(clr.nc, '\n')
         else:
             print(l.line, file=sys.stderr)

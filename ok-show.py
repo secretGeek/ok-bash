@@ -47,7 +47,8 @@ def get_env(name, default, legal_values=None):
     return val
 
 class ok_color:
-    #TODO: need to check if colors are supported? (https://unix.stackexchange.com/questions/9957/how-to-check-if-bash-can-print-colors)
+    #TODO: need to check if colors are supported (so it can be used with `less` and others)?
+    #(https://unix.stackexchange.com/questions/9957/how-to-check-if-bash-can-print-colors)
     def __init__(self):
         self.nc      = '\033[0m'
         self.heading = get_env('_OK_C_HEADING', '\033[0;31m')

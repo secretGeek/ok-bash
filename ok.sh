@@ -207,8 +207,8 @@ else
     re_list_once=$'ok list-once'
     while (( $# > 0 )) ; do
         case $1 in
-            reset)          for x in $(set | grep "^_OK_" | awk -F '=' '{print $1}'); do 
-                                unset "$x"="${!x}"
+            reset)          for x in $(set | grep "^_OK_[^_]" | awk -F '=' '{print $1}'); do 
+                                unset "$x"
                             done
                             if [[ $PROMPT_COMMAND =~ $re_list_once ]]; then export PROMPT_COMMAND="${PROMPT_COMMAND/$'\n'$re_list_once/}"; fi;;
             prompt)         if [[ $# -ge 2 ]]; then export _OK_PROMPT=$2; shift; else echo "the prompt argument needs the actual prompt as 2nd argument"; fi;;

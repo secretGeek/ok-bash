@@ -64,9 +64,15 @@ environment variables (for internal use):
         # save and remove argument. Remaining arguments are passwed to eval automatically
         local line_nr=$1 #LINE_NR is guaranteed to be 1 or more
         shift
-        # get the line to be executed (swap stdout and stderr, since the to be executed line is shown on stderr, but we want to store it)
+        # get the line to be executed
         local line_text
-        line_text="$(cat "$ok_file" | "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -t "$(tput cols)" "$line_nr" 3>&1 1>&2 2>&3)" || return $?
+        line_text="$(cat "$ok_file" | "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -t "$(tput cols)" "$line_nr")"
+        local res=$?
+        if [[ $res -ne 0 ]]; then
+            #because stdout/stderr are swapped by ok-show.py in this case, handle this too
+            >&2 echo "$line_text"
+            return "$res"
+        fi
         eval "$line_text"
     }
 

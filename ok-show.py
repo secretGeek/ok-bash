@@ -162,6 +162,8 @@ def main():
         if len(cmd_lines) == 0:
             sys.exit(1)
     else:
+        # swap stdout and stderr (the calling shell-script needs a unformated string, and we need to print something to the display as well)
+        (sys.stdout, sys.stderr) = (sys.stderr, sys.stdout)
         try:
             p_line = next(x for x in p_lines if x.t=='code' and x.line_nr==args.only_line_nr)
         except StopIteration:

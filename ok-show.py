@@ -86,7 +86,7 @@ def set_indent(l, start, stop, max_pos, max_width):
         if item.t == 'code':
             item.set_indent(max_pos, max_width)
 
-def format_lines(l, elastic_tab, nr_positions_line_nr, max_width):
+def format_lines(l, elastic_tab, tab_stop_step, nr_positions_line_nr, max_width):
     if elastic_tab == 0: return
     if elastic_tab == 1: group_reset = ['heading','whitespace']
     if elastic_tab == 2: group_reset = ['heading']
@@ -103,6 +103,8 @@ def format_lines(l, elastic_tab, nr_positions_line_nr, max_width):
             has_no_next_item = i+1>=len(l)
             if has_no_next_item or l[i+1].t in group_reset:
                 max_command_width = max_width - nr_positions_line_nr - len('. ')
+                # indent only at certain positions
+                max_pos += tab_stop_step - max_pos % tab_stop_step
                 set_indent(l, start_group, i+1, max_pos, max_command_width)
                 start_group = None #reset start code-block
 
@@ -129,6 +131,7 @@ def main():
     # customizations
     clr = ok_color()
     comment_align = get_env('_OK_COMMENT_ALIGN', 2, [0,1,2,3])
+    tab_stop_step = get_env('_OK_TAB_STOP_STEP', 5, range(1,25))
 
     # handle arguments
     parser = argparse.ArgumentParser(description='Show the ok-file colorized (or just one line).')
@@ -153,7 +156,7 @@ def main():
     p_lines = parse_lines(lines)
     cmd_lines = [pl.line_nr for pl in p_lines if pl.line_nr]
     nr_positions_line_nr = len(str(max(cmd_lines))) if len(cmd_lines)>0 else 0
-    format_lines(p_lines, comment_align, nr_positions_line_nr, args.terminal_width)
+    format_lines(p_lines, comment_align, tab_stop_step, nr_positions_line_nr, args.terminal_width)
 
     # execute
     if args.only_line_nr is None:

@@ -152,6 +152,7 @@ environment variables (for internal use):
                 elif [[ $show_prompt == 1 && $list_result == 0 ]]; then #only show prompt, if there where commands printed
                     local prompt_input
                     local re_num_begin='^[1-9][0-9]*($| )' # You can enter arguments at the ok-prompt too, hence different regex
+                    # The following read doesn't work in a sub-shell, so list-prompt fails when using it in a script
                     read -rp "${c_prompt}${prompt}${c_nc}" prompt_input
                     if [[ $prompt_input =~ $re_num_begin ]]; then
                         #save command to history first

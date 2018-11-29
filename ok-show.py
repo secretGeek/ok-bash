@@ -63,7 +63,7 @@ def cprint(color, text=''):
 
 def parse_lines(lines):
     #handle Unicode BOM after being decoded: https://stackoverflow.com/a/28407897/56 and https://stackoverflow.com/a/1068700/56
-    if ord(lines[0][0]) == 0xFEFF: # BOM_UTF16_BE
+    if len(lines)>0 and len(lines[0])>0 and ord(lines[0][0]) == 0xFEFF: # BOM_UTF16_BE
         lines[0] = lines[0][1:]
     result = []
     line_nr = 0

@@ -3,8 +3,7 @@
 See <http://secretgeek.net/ok> for the blog post launching (and describing) "ok".
 
 
-"ok" gives you .ok folder profiles for bash
--------------------------------------------
+## "ok" gives you .ok folder profiles for bash
 
 `ok` makes you smarter and more efficient.
 
@@ -46,8 +45,9 @@ And you can pass simple arguments to the commands. For example:
     Pushing to master.
 
 
-Installation
-------------
+## Getting started
+
+### Installation
 
 Clone the git-repository (`git clone https://github.com/secretGeek/ok-bash.git`), so you can easily update it with a `git pull`.
 
@@ -60,8 +60,37 @@ Install it by "." (i.e. source) the "ok.sh" script from your `~/.profile` (or yo
 For more advanced installation options, check out the section _customization_ below.
 
 
-Customization
--------------
+### First steps after installing
+
+OK, let's get started. As an example project, assume you are in charge of a web applications (amongst many), and because you don't have the memory of an elephant, you want to keep a log-file on that web application. Let run this first:
+
+    cd ~/my_web_app
+    echo "# My web app: Ops remarks">.ok
+
+The first commands navigates to our imaginary web application, and the second line creates the file `.ok` with a comment on the first line. Let's add commands to it:
+
+    echo 'echo "$(date "+%Y-%m-%d %H:%M:%S"): $*" >> ops_remarks.log; tail -n 1 ops_remarks.log  # Add entry to the log'>>.ok
+    echo 'tail -n ${1:-12} ops_remarks.log # Show the last 12 operation remarks'>>.ok
+
+Notice the following: I use append redirect (`>>.ok`) to add a line to the `.ok` file. Also, I use single quotes `'`, so no funny things happen with the string before it ends up in our `.ok`-file.
+
+To show the newly created ok file, run `ok`:
+
+    # My web app: Ops remarks
+    1. echo "$(date "+%Y-%m-%d %H:%M:%S"): $*" >> ops_remarks.log; tail -n 1 ops_remarks.log     # Add entry to the log
+    2. tail -n ${1:-12} ops_remarks.log                                                          # Show the last 12 operation remarks
+
+When you run it on the command line, the screen is actually color highlighted. Also note the automatic indentation of the commands. Now run `ok 1 "Added ops remark logging via 'ok-bash' to this project"` to add a line to the log. This adds a line to out log file, prefixed with a ISO date. `$*` is actually expanded to all the arguments provided after the ok line-number, so you sometimes can omit quotes, like `ok 1 My work here is done.`. The command also shows the line that has been added to the file, so you know what your collegues might read when they check the file.
+
+To show the last 12 lines, run `ok 2` (12 is the default, to show the last 7 lines, run `ok 2 7`):
+
+    2. tail -n ${1:-12} ops_remarks.log                                                          # Show the last 12 operation remarks
+    2018-12-16 22:21:20: Added ops remark logging via 'ok-bash' to this project
+
+<span style="color:red">And then say that "Customizing allows you to do things such as" and have a few bullet points that are effectively an *advertisement* for the customization section that follows immediately next.</span>
+
+
+## Customization
 
 If you tried to run the script directly with `./ok.sh`, you might have noticed there are some options to customize `ok`.
 After the script has been installed, running `ok -v -h` will show somewhat other customization options (environment variables).
@@ -121,8 +150,7 @@ The easiest way to determine colors is with [`tput`](https://www.tldp.org/HOWTO/
 You  can also checkout `ok`'s own `.ok` file to play around.
 
 
-Development
------------
+##Development
 
 `ok` should run on a standard _Linux_  or _macOS_ installation. That means minimum _bash 3.2_ and _python 2.7_. 
 

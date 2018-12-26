@@ -105,7 +105,7 @@ def format_lines(l, elastic_tab, tab_stop_step, nr_positions_line_nr, max_width)
             if has_no_next_item or l[i+1].t in group_reset:
                 max_command_width = max_width - nr_positions_line_nr - len('. ')
                 # indent only at certain positions
-                max_pos += tab_stop_step - max_pos % tab_stop_step
+                max_pos += (tab_stop_step - 1) - (max_pos % tab_stop_step)
                 set_indent(l, start_group, i+1, max_pos, max_command_width)
                 start_group = None #reset start code-block
 
@@ -132,7 +132,7 @@ def main():
     # customizations
     clr = ok_color()
     comment_align = get_env('_OK_COMMENT_ALIGN', 2, [0,1,2,3])
-    tab_stop_step = get_env('_OK_TAB_STOP_STEP', 5, range(1,25))
+    tab_stop_step = get_env('_OK_TAB_STOP_STEP', 1, range(1,25))
 
     # handle arguments
     parser = argparse.ArgumentParser(description='Show the ok-file colorized (or just one line).')

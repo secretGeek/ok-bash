@@ -47,7 +47,7 @@ script-arguments:
   _OK_C_PROMPT       ${_OK_C_PROMPT}Color-code${c_nc} for prompt (both input as command confirmation). Defaults to color for numbering.
 environment variables (other configuration):
   _OK_COMMENT_ALIGN  Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
-  _OK_TAB_STOP_STEP  At which column interval ($t) comments are indented. Default 5 (aligns at 5, 10, 15 etc.). Legal: 1..25. 
+  _OK_TAB_STOP_STEP  At which column interval ($t) comments are indented. Default 1 (value 5 aligns at 5, 10, 15 etc.). Legal: 1..25. 
   _OK_PROMPT         String ($p) used as prompt (both input as command confirmation). Defaults to '$ '.
   _OK_PROMPT_DEFAULT Setting ($l) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
   _OK_VERBOSE        Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.

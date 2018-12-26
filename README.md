@@ -55,42 +55,30 @@ Install it by "." (i.e. source) the "ok.sh" script from your `~/.profile` (or yo
 
     . ~/path/to/ok-bash/ok.sh
 
-💡 Tip: The script needs to be "sourced", otherwise commands like `cd` and `export` in your `.ok` file wouldn't have  any effect.
+💡 Pro tip: The script needs to be "sourced", otherwise commands like `cd` and `export` in your `.ok` file wouldn't have  any effect.
 
 For more advanced installation options, check out the section _customization_ below.
 
 
 ### First steps after installing
 
-OK, let's get started. As an example project, assume you are in charge of a web applications (amongst many), and because you don't have the memory of an elephant, you want to keep a log-file on that web application. Let run this first:
+You can try out the included `.ok` file by navigating to `~/path/to/ok-bash` and type `ok`. Explore some of the options.
 
-    cd ~/my_web_app
-    echo "# My web app: Ops remarks">.ok
+Next you can create your own `.ok` file. Navigate to the folder where you want to store it, and run for example:
 
-The first commands navigates to our imaginary web application, and the second line creates the file `.ok` with a comment on the first line. Let's add commands to it:
+    echo '# My first ok-command'>>.ok
+    echo 'echo "Hi $USER, the time when pressed enter was $(date "+%H:%M:%S")"'>>.ok
 
-    echo 'echo "$(date "+%Y-%m-%d %H:%M:%S"): $*" >> ops_remarks.log; tail -n 1 ops_remarks.log  # Add entry to the log'>>.ok
-    echo 'tail -n ${1:-12} ops_remarks.log # Show the last 12 operation remarks'>>.ok
+The first line adds a "heading" to the `.ok` file, which is nice to keep the file organized. I used append redirect (`>>.ok`) to append a line to the `.ok` file. When the file doesn't exist, it's created. 
 
-Notice the following: I use append redirect (`>>.ok`) to add a line to the `.ok` file. Also, I use single quotes `'`, so no funny things happen with the string before it ends up in our `.ok`-file.
-
-To show the newly created ok file, run `ok`:
-
-    # My web app: Ops remarks
-    1. echo "$(date "+%Y-%m-%d %H:%M:%S"): $*" >> ops_remarks.log; tail -n 1 ops_remarks.log     # Add entry to the log
-    2. tail -n ${1:-12} ops_remarks.log                                                          # Show the last 12 operation remarks
-
-When you run it on the command line, the screen is actually color highlighted. Also note the automatic indentation of the commands. Now run `ok 1 "Added ops remark logging via 'ok-bash' to this project"` to add a line to the log. This adds a line to out log file, prefixed with a ISO date. `$*` is actually expanded to all the arguments provided after the ok line-number, so you sometimes can omit quotes, like `ok 1 My work here is done.`. The command also shows the line that has been added to the file, so you know what your collegues might read when they check the file.
-
-To show the last 12 lines, run `ok 2` (12 is the default, to show the last 7 lines, run `ok 2 7`):
-
-    2. tail -n ${1:-12} ops_remarks.log                                                          # Show the last 12 operation remarks
-    2018-12-16 22:21:20: Added ops remark logging via 'ok-bash' to this project
+Also, I use single quotes `'`, so no funny things happen to the string, before it ends up in your `.ok` file. This way, `$USER` and `$(date...)` are evaluated when the `ok` command is run, not when you add the line to the `.ok` file.
 
 <span style="color:red">And then say that "Customizing allows you to do things such as" and have a few bullet points that are effectively an *advertisement* for the customization section that follows immediately next.</span>
 
 
 ## Customization
+
+<span style="color:red">base are environment variables, ...</span>
 
 If you tried to run the script directly with `./ok.sh`, you might have noticed there are some options to customize `ok`.
 After the script has been installed, running `ok -v -h` will show somewhat other customization options (environment variables).

@@ -174,7 +174,7 @@ def main():
             if args.verbose >= 2: print("ERROR: entered line number '{}' does not exist".format(args.only_line_nr))
             sys.exit(2)
         # The formated line is printed to stdout, and the actual line from .ok is printed to stderr
-        if args.verbose >= 1: print_line(p_line, clr, nr_positions_line_nr, True)
+        if args.verbose > 0: print_line(p_line, clr, nr_positions_line_nr, True)
         print_line(p_line, clr, nr_positions_line_nr, False)
 
 

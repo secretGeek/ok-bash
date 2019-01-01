@@ -26,8 +26,8 @@ command (use one):
   p, list-prompt      Show the list and wait for input at the ok-prompt (like --list and <number> in one command).$list_prompt_default
   h, help             Show this usage page.
 options:
-  -v, --verbose       Show more output, most of the time to stderr.
-  -q, --quiet         Only show really necessary output.
+  -v, --verbose       Show more output, mostly errors. Also it shows environment-variables in this screen.
+  -q, --quiet         Only show really necessary output, so surpress echoing the command.
   -f, --file <file>   Use a custom file instead of '.ok'; use '-' for stdin
   -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
 script-arguments:

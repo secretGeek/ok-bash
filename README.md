@@ -78,18 +78,69 @@ Also, I use single quotes `'`, so no funny things happen to the string, before i
 
 ## Customization
 
-<span style="color:red">base are environment variables, ...</span>
+If you tried to run the script directly, you might have noticed there are some options to customize `ok`. Let's show the output here:
 
-If you tried to run the script directly with `./ok.sh`, you might have noticed there are some options to customize `ok`.
-After the script has been installed, running `ok -v -h` will show somewhat other customization options (environment variables).
+    $ ./ok.sh 
+    tip: "." (i.e. source) this file from your ~/.profile, e.g. ". ~/prj/GitHub/ok-bash/ok.sh <arguments>"
 
-The options shown with `./ok.sh` are called _installation helpers_. It's likely you want to install this tool on all your machines, so the customization is optimized to fit on one line for easy copy-'n'-pasting!
+    arguments, if you need to customize (these can also be set via arguments/environment):
+      reset            Reset (unset) all environment variables ($_OK_*) and will undo  'auto_show' if set (can modify $PROMPT_COMMAND)
+      prompt <prompt>  Use the supplied prompt (e.g. prompt '> ')
+      prompt_default   Prompt default when issueing running ok without arguments
+      auto_show        Perform 'ok list-once' every time the prompt is shown (modifies $PROMPT_COMMAND)
+      comment_align N  Level of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
+      verbose          Enable verbose mode
+      quiet            Enable quiet mode
 
-So if you want to change the prompt to `% ` and want `ok` to prompt for a line number and optional arguments when not supplied, install `ok` like this:
+The options shown here are called _installation helpers_. Because it's likely you want to install this tool on all your machines, the customization is optimized to fit on one line for easy copy-'n'-pasting! 
+
+Before I explain these helpers, I'd like to show the `ok`-command help screen, because they are related:
+
+    $ ok -v -h # The verbose option (-v) makes 'ok' also show the used environment variables
+    Usage: ok [options] <number> [script-arguments..]
+           ok command [options]
+
+    command (use one):
+      <number>            Run the <number>th command from the '.ok' file.
+      l, list             Show the list from the '.ok' file.
+      L, list-once        Same as list, but only show when pwd is different from when the list was last shown.
+      p, list-prompt      Show the list and wait for input at the ok-prompt (like --list and <number> in one command). Default command.
+      h, help             Show this usage page.
+    options:
+      -v, --verbose       Show more output, most of the time to stderr.
+      -q, --quiet         Only show really necessary output.
+      -f, --file <file>   Use a custom file instead of '.ok'; use '-' for stdin
+      -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
+    script-arguments:
+      ...                 These are passed through, when a line is executed (you can enter these too at the ok-prompt)
+
+    environment variables (used for colored output; current colors are shown):
+      _OK_C_HEADING      Color-code for lines starting with a comment (heading). Defaults to red.
+      _OK_C_NUMBER       Color-code for numbering. Defaults to cyan.
+      _OK_C_COMMENT      Color-code for comments after commands. Defaults to blue.
+      _OK_C_COMMAND      Color-code for commands. Defaults to color-reset.
+      _OK_C_PROMPT       Color-code for prompt (both input as command confirmation). Defaults to color for numbering.
+    environment variables (other configuration):
+      _OK_COMMENT_ALIGN  Level (unset) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
+      _OK_TAB_STOP_STEP  At which column interval (unset) comments are indented. Default 1 (value 5 aligns at 5, 10, 15 etc.). Legal: 1..25. 
+      _OK_PROMPT         String ('=> ') used as prompt (both input as command confirmation). Defaults to '$ '.
+      _OK_PROMPT_DEFAULT Setting (1) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
+      _OK_VERBOSE        Level (unset) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
+    environment variables (for internal use):
+      _OK__LAST_PWD      Remember the path () that was last listed, for use with the list-once command.
+      _OK__PATH_TO_ME    The path (/Users/doekman/prj/GitHub/ok-bash) to the location of this script.
+
+
+How this all works together is explained below. 
+
+
+### Customizing behaviour
+
+So if you want to change the prompt to `% ` and want `ok` to prompt for a line number directly after entering `ok`, install ok-bash like this:
 
     . ~/path/to/ok-bash/ok.sh prompt "% " prompt_default
 
-The conversation will look like this (the `$` is bash' prompt, and the `%` is ok's prompt (we just changed the prompt, remember?)):
+The example from the beginning of this README will look like the following (the `$` is bash' prompt, and the `%` is ok's prompt; we just changed the prompt, remember?):
 
     $ ok
     1. ./build.sh            # builds the project
@@ -103,7 +154,7 @@ The conversation will look like this (the `$` is bash' prompt, and the `%` is ok
     Rebase successful
     Pushing to master.
 
-This can also be done by the following:
+Instead of using the installation helper, this can also be done by the following lines (the environment variables are listed by the `ok -v -h` command above):
 
     . ~/path/to/ok-bash/ok.sh
     _OK_PROMPT="% "
@@ -111,15 +162,18 @@ This can also be done by the following:
 
 Using an installation helper is a bit shorter, right?
 
-If you automatically want to see the `.ok` file when it's present when you navigate, you can use the `auto_show` helper:
+If you automatically want to see the `.ok` file when it's present when you change the current directory, you can use the `auto_show` helper:
 
     . ~/path/to/ok-bash/ok.sh auto_show
 
 This will actually modify `$PROMPT_COMMAND`, which is ran whenever you change directories. `auto_show` will add `ok list-once` to this command, so it will show the `.ok` file, but only once.
 
-If you don't want to load `ok` from your `.profile` and want to play around with settings, `reset` as argument will go back to the initial state. Combined with a custom prompt and `auto_show` you can issue:
+If you want to play around with the installation helpers, `reset` as argument will go back to the initial state. Combined with a custom prompt and `auto_show` you can issue:
 
     . ~/path/to/ok-bash/ok.sh reset prompt '>>>' auto_show
+
+
+### Customizing colors and formatting
 
 Finally you can customize colors and formatting. I'll start with aligning comments, which can be indented to start on the same column. You can switch it off (0), align comment blocks (1 and also default), ditto but comment blocks may also contain empty lines (2) or align all comments (3). To align all comments:
 
@@ -129,6 +183,8 @@ You can also do this by setting an environment variable:
 
     _OK_COMMENT_ALIGN=3
 
+TODO: Explain via `.ok` file and [SVG animation](https://nbedos.github.io/termtosvg/)
+
 There are no installation helpers for setting colors at the moment. You can control the colors with the `_OK_C_*` variables shown with the command `ok -v -h`.
 The easiest way to determine colors is with [`tput`](https://www.tldp.org/HOWTO/Bash-Prompt-HOWTO/x405.html):
 
@@ -137,8 +193,11 @@ The easiest way to determine colors is with [`tput`](https://www.tldp.org/HOWTO/
 
 You  can also checkout `ok`'s own `.ok` file to play around.
 
+TODO: `_OK_TAB_STOP_STEP`  
+TODO: options verbose/quiet and `_OK_VERBOSE`  
+TODO: options file/alias
 
-##Development
+## Development
 
 `ok` should run on a standard _Linux_  or _macOS_ installation. That means minimum _bash 3.2_ and _python 2.7_. 
 

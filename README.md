@@ -77,9 +77,9 @@ What to put in these `.ok` files? Good places to start are the `history` file on
 
 After that you can look at customization. This allows you to do things such as:
 
-* show the ok list automatically everytime you change folders
-* change the coloring scheme
-* create your own commands
+* show the ok-list automatically everytime you change folders
+* change the coloring scheme and other formatting options
+* create your own commands that use ok-bash
 
 
 ## Customization
@@ -178,6 +178,14 @@ If you want to play around with the installation helpers, `reset` as argument wi
 
     . ~/path/to/ok-bash/ok.sh reset prompt '>>>' auto_show
 
+You can make `ok` more "verbose" or more "quiet" by the options with the same name. More verbose mostly means an error message will be written to `stderr`. This might help you to understand ok's behaviour better. For example `ok 12345` will do nothing and exit with exit-code 2, but `ok -v 12345` will complaint with `ERROR: entered line number '12345' does not exist`.
+
+Also as demonstrated in the beginning of this _Customization_ chapter, the help-screen will show the used environment-variabels when specifing `-v` or `--verbose`. 
+
+The `-q` or `--quiet` option will suppress output from `ok-bash` itself. So when you run `ok -q 1` the command on line 1 will be executed, but `ok-bash` will not echo the command to the screen.
+
+You can specify the verbose/quiet-options as installation helper, environment variable or argument option. There is no environment variable for quiet. Instead you use `export _OK_VERBOSE=0` for quiet. The argument option will override any environment setting.
+
 
 ### Customizing formatting and colors
 
@@ -203,13 +211,6 @@ The easiest way to determine colors is with [`tput`](https://www.tldp.org/HOWTO/
 
 You  can also checkout `ok-bash`'s own `.ok` file to play around.
 
-You can make `ok` more "verbose" or more "quiet" by the options with the same name. More verbose mostly means an error message will be written to `stderr`. This might help you to understand ok's behaviour better. For example `ok 12345` will do nothing and exit with exit-code 2, but `ok -v 12345` will complaint with `ERROR: entered line number '12345' does not exist`.
-
-Also as demonstrated in the beginning of this _Customization_ chapter, the help-screen will show the used environment-variabels when specifing `-v` or `--verbose`. 
-
-The `-q` or `--quiet` option will suppress output from `ok-bash` itself. So when you run `ok -q 1` the command on line 1 will be executed, but `ok-bash` will not echo the command to the screen.
-
-You can specify the verbose/quiet-options as installation helper, environment variable or argument option. There is no environment variable for quiet. Instead you use `export _OK_VERBOSE=0` for quiet. The argument option will override any environment setting.
 
 ### Creating your own commands
 

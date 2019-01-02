@@ -73,7 +73,13 @@ The first line adds a "heading" to the `.ok` file, which is nice to keep the fil
 
 Also, I use single quotes `'`, so no funny things happen to the string, before it ends up in your `.ok` file. This way, `$USER` and `$(date...)` are evaluated when the `ok` command is run, not when you add the line to the `.ok` file.
 
-<span style="color:red">And then say that "Customizing allows you to do things such as" and have a few bullet points that are effectively an *advertisement* for the customization section that follows immediately next.</span>
+What to put in these `.ok` files? Good places to start are the `history` file on the servers you manage. You could also take a look what commands are burried in your documentation. Even adding a script file with a comment and grouped under the correct heading can be really helpfull.
+
+After that you can look at customization. This allows you to do things such as:
+
+* show the ok list automatically everytime you change folders
+* change the coloring scheme
+* create your own commands
 
 
 ## Customization
@@ -81,7 +87,7 @@ Also, I use single quotes `'`, so no funny things happen to the string, before i
 If you tried to run the script directly, you might have noticed there are some options to customize `ok`. Let's show the output here:
 
     $ ./ok.sh 
-    tip: "." (i.e. source) this file from your ~/.profile, e.g. ". ~/prj/GitHub/ok-bash/ok.sh <arguments>"
+    tip: "." (i.e. source) this file from your ~/.profile, e.g. ". /path/to/ok-bash/ok.sh <arguments>"
 
     arguments, if you need to customize (these can also be set via arguments/environment):
       reset            Reset (unset) all environment variables ($_OK_*) and will undo  'auto_show' if set (can modify $PROMPT_COMMAND)
@@ -102,13 +108,13 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
 
     command (use one):
       <number>            Run the <number>th command from the '.ok' file.
-      l, list             Show the list from the '.ok' file.
+      l, list             Show the list from the '.ok' file. Default command.
       L, list-once        Same as list, but only show when pwd is different from when the list was last shown.
-      p, list-prompt      Show the list and wait for input at the ok-prompt (like --list and <number> in one command). Default command.
+      p, list-prompt      Show the list and wait for input at the ok-prompt (like --list and <number> in one command).
       h, help             Show this usage page.
     options:
-      -v, --verbose       Show more output, most of the time to stderr.
-      -q, --quiet         Only show really necessary output.
+      -v, --verbose       Show more output, mostly errors. Also it shows environment-variables in this screen.
+      -q, --quiet         Only show really necessary output, so surpress echoing the command.
       -f, --file <file>   Use a custom file instead of '.ok'; use '-' for stdin
       -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
     script-arguments:
@@ -123,12 +129,12 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
     environment variables (other configuration):
       _OK_COMMENT_ALIGN  Level (unset) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
       _OK_TAB_STOP_STEP  At which column interval (unset) comments are indented. Default 1 (value 5 aligns at 5, 10, 15 etc.). Legal: 1..25. 
-      _OK_PROMPT         String ('=> ') used as prompt (both input as command confirmation). Defaults to '$ '.
-      _OK_PROMPT_DEFAULT Setting (1) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
+      _OK_PROMPT         String (unset) used as prompt (both input as command confirmation). Defaults to '$ '.
+      _OK_PROMPT_DEFAULT Setting (unset) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
       _OK_VERBOSE        Level (unset) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
     environment variables (for internal use):
-      _OK__LAST_PWD      Remember the path () that was last listed, for use with the list-once command.
-      _OK__PATH_TO_ME    The path (/Users/doekman/prj/GitHub/ok-bash) to the location of this script.
+      _OK__LAST_PWD      Remember the path (/path/to/some/place/with/an/.ok/file) that was last listed, for use with the list-once command.
+      _OK__PATH_TO_ME    The path (/path/to/ok-bash) to the location of this script.
 
 
 How this all works together is explained below. 
@@ -173,9 +179,11 @@ If you want to play around with the installation helpers, `reset` as argument wi
     . ~/path/to/ok-bash/ok.sh reset prompt '>>>' auto_show
 
 
-### Customizing colors and formatting
+### Customizing formatting and colors
 
-Finally you can customize colors and formatting. I'll start with aligning comments, which can be indented to start on the same column. You can switch it off (0), align comment blocks (1 and also default), ditto but comment blocks may also contain empty lines (2) or align all comments (3). To align all comments:
+Finally you can customize colors and formatting. I'll start with aligning comments, which can be indented, so they start on the same column. You can switch it off (0), align comment blocks (1 and also default), ditto but comment blocks may also contain empty lines (2) or align all comments on the same column (3). There is also "wrap protection": if indentation would cause the line to wrap, that line would be indented less.
+
+To align all comments:
 
     . ~/path/to/ok-bash/ok.sh comment_align 3
 
@@ -183,7 +191,9 @@ You can also do this by setting an environment variable:
 
     _OK_COMMENT_ALIGN=3
 
-TODO: Explain via `.ok` file and [SVG animation](https://nbedos.github.io/termtosvg/)
+You can also fine tune this. Say you have comment blocks set to 1 (the default), but notice some groups are aligned at column 42 and the comment group at column 44. You can force indentation to be a modulo of 4 by setting `export _OK_TAB_STOP_STEP=4` (default 1). This way the group normally aligned at column 42 now gets aligned at column 44. This option can make the screen less "busy", but also introduce more whitespace.
+
+__TODO: Explain via `.ok` file and [SVG animation](https://nbedos.github.io/termtosvg/)__
 
 There are no installation helpers for setting colors at the moment. You can control the colors with the `_OK_C_*` variables shown with the command `ok -v -h`.
 The easiest way to determine colors is with [`tput`](https://www.tldp.org/HOWTO/Bash-Prompt-HOWTO/x405.html):
@@ -191,11 +201,35 @@ The easiest way to determine colors is with [`tput`](https://www.tldp.org/HOWTO/
     _OK_C_HEADING="$(tput setaf 3)"  # show headings (lines without commands but with a comment) in YELLOW
     _OK_C_NUMBER="$(tput setaf 2)"   # show the command numbers and prompt in GREEN
 
-You  can also checkout `ok`'s own `.ok` file to play around.
+You  can also checkout `ok-bash`'s own `.ok` file to play around.
 
-TODO: `_OK_TAB_STOP_STEP`  
-TODO: options verbose/quiet and `_OK_VERBOSE`  
-TODO: options file/alias
+You can make `ok` more "verbose" or more "quiet" by the options with the same name. More verbose mostly means an error message will be written to `stderr`. This might help you to understand ok's behaviour better. For example `ok 12345` will do nothing and exit with exit-code 2, but `ok -v 12345` will complaint with `ERROR: entered line number '12345' does not exist`.
+
+Also as demonstrated in the beginning of this _Customization_ chapter, the help-screen will show the used environment-variabels when specifing `-v` or `--verbose`. 
+
+The `-q` or `--quiet` option will suppress output from `ok-bash` itself. So when you run `ok -q 1` the command on line 1 will be executed, but `ok-bash` will not echo the command to the screen.
+
+You can specify the verbose/quiet-options as installation helper, environment variable or argument option. There is no environment variable for quiet. Instead you use `export _OK_VERBOSE=0` for quiet. The argument option will override any environment setting.
+
+### Creating your own commands
+
+To explain the file/alias argument options, I will start with this example:
+
+    alias SSH='ok --verbose --file ~/.ssh/.ok --alias SSH'
+
+This will create the alias `SSH`, which will show a list of all _ssh_ connections and/or let you establish a connection to one. The `--file ~/.ssh/.ok` tells `ok-bash` to look for the `.ok` file in that absolute path. The `--alias SSH` arugment tells the alias what it's name is (in bash, normally an alias can't find it's own name unless it's been told so). The `--verbose` option will make `ok-bash` very vocal about any mistake you might make.
+
+Besides creating this alias, you also need to populate the `~/.ssh/.ok` file yourself. You could also generate this list from your `~/.ssh/config` file, but this works for me. I've grouped my connections in the `~/.ssh/.ok` file like this:
+
+     # LAN nodes
+     ssh local_server
+     # Internet nodes
+     ssh internet_server
+
+You can think up anything you want; the sky is the limit. I intent to keep a list here of examples for inspiration:
+
+* [awesomecsv](https://gist.github.com/doekman/d6743e95bfb5f3d9491d3ec7b4a6e607) - Shows the `awesomecsv` list by using `ok-bash` in the terminal (and navigate to these links too)
+
 
 ## Development
 

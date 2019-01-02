@@ -131,18 +131,19 @@ def print_line(l, clr, nr_positions_line_nr, format_line):
 def main():
     # customizations
     clr = ok_color()
-    comment_align = get_env('_OK_COMMENT_ALIGN', 2, [0,1,2,3])
-    tab_stop_step = get_env('_OK_TAB_STOP_STEP', 1, range(1,25))
 
     # handle arguments
     parser = argparse.ArgumentParser(description='Show the ok-file colorized (or just one line).')
-    parser.add_argument('--verbose', '-v', metavar='V', type=int, default=1, help='0=quiet, 1=normal, 2=verbose. Defaults to 1. ')
-    parser.add_argument('--terminal_width', '-t', metavar='TW', type=int, default=230, help='number of columns of the terminal (tput cols) ')
+    parser.add_argument('--verbose',        '-v', metavar='V', type=int, default=1, help='0=quiet, 1=normal, 2=verbose. Defaults to 1. ')
+    parser.add_argument('--comment_align',  '-c', metavar='CA', type=int, default=2, choices= [0,1,2,3], help='Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.')
+    parser.add_argument('--tab_stop_step',  '-s', metavar='TSS', type=int, default=1, choices=range(1, 26), help='At which column interval ($t) comments are indented. Default 1 (value 5 aligns at 5, 10, 15 etc.). Legal: 1..25.')
+    parser.add_argument('--terminal_width', '-t', metavar='TW', type=int, default=230, help='number of columns of the terminal (tput cols)')
     parser.add_argument('only_line_nr', metavar='N', type=int, nargs='?', help='the line number to show')
     args = parser.parse_args()
 
     if args.verbose > 1:
-        print('comment_align:', comment_align)
+        print('comment_align:', args.comment_align)
+        print('tab_stop_step:', args.tab_stop_step)
         print('terminal_width:', args.terminal_width)
 
     #setup UTF-8
@@ -157,7 +158,7 @@ def main():
     p_lines = parse_lines(lines)
     cmd_lines = [pl.line_nr for pl in p_lines if pl.line_nr]
     nr_positions_line_nr = len(str(max(cmd_lines))) if len(cmd_lines)>0 else 0
-    format_lines(p_lines, comment_align, tab_stop_step, nr_positions_line_nr, args.terminal_width)
+    format_lines(p_lines, args.comment_align, args.tab_stop_step, nr_positions_line_nr, args.terminal_width)
 
     # execute
     if args.only_line_nr is None:

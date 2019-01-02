@@ -94,7 +94,8 @@ If you tried to run the script directly, you might have noticed there are some o
       prompt <prompt>  Use the supplied prompt (e.g. prompt '> ')
       prompt_default   Prompt default when issueing running ok without arguments
       auto_show        Perform 'ok list-once' every time the prompt is shown (modifies $PROMPT_COMMAND)
-      comment_align N  Level of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
+      comment_align N  Level of comment alignment. See $_OK_COMMENT_ALIGN
+      tab_stop_step N  At which column interval comments are indented. See $_OK_TAB_STOP_STEP
       verbose          Enable verbose mode
       quiet            Enable quiet mode
 
@@ -113,6 +114,8 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
       p, list-prompt      Show the list and wait for input at the ok-prompt (like --list and <number> in one command).
       h, help             Show this usage page.
     options:
+      -c, --comment_align N  Level of comment alignment. See $_OK_COMMENT_ALIGN
+      -s, --tab_stop_step N  At which column interval comments are indented. See $_OK_TAB_STOP_STEP
       -v, --verbose       Show more output, mostly errors. Also it shows environment-variables in this screen.
       -q, --quiet         Only show really necessary output, so surpress echoing the command.
       -f, --file <file>   Use a custom file instead of '.ok'; use '-' for stdin

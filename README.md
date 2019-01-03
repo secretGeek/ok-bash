@@ -95,7 +95,6 @@ If you tried to run the script directly, you might have noticed there are some o
       prompt_default   Prompt default when issueing running ok without arguments
       auto_show        Perform 'ok list-once' every time the prompt is shown (modifies $PROMPT_COMMAND)
       comment_align N  Level of comment alignment. See $_OK_COMMENT_ALIGN
-      tab_stop_step N  At which column interval comments are indented. See $_OK_TAB_STOP_STEP
       verbose          Enable verbose mode
       quiet            Enable quiet mode
 
@@ -115,7 +114,6 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
       h, help             Show this usage page.
     options:
       -c, --comment_align N  Level of comment alignment. See $_OK_COMMENT_ALIGN
-      -s, --tab_stop_step N  At which column interval comments are indented. See $_OK_TAB_STOP_STEP
       -v, --verbose       Show more output, mostly errors. Also it shows environment-variables in this screen.
       -q, --quiet         Only show really necessary output, so surpress echoing the command.
       -f, --file <file>   Use a custom file instead of '.ok'; use '-' for stdin
@@ -131,7 +129,6 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
       _OK_C_PROMPT       Color-code for prompt (both input as command confirmation). Defaults to color for numbering.
     environment variables (other configuration):
       _OK_COMMENT_ALIGN  Level (unset) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
-      _OK_TAB_STOP_STEP  At which column interval (unset) comments are indented. Default 1 (value 5 aligns at 5, 10, 15 etc.). Legal: 1..25. 
       _OK_PROMPT         String (unset) used as prompt (both input as command confirmation). Defaults to '$ '.
       _OK_PROMPT_DEFAULT Setting (unset) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
       _OK_VERBOSE        Level (unset) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
@@ -201,8 +198,6 @@ To align all comments:
 You can also do this by setting an environment variable:
 
     _OK_COMMENT_ALIGN=3
-
-You can also fine tune this. Say you have comment blocks set to 1 (the default), but notice some groups are aligned at column 42 and the comment group at column 44. You can force indentation to be a modulo of 4 by setting `export _OK_TAB_STOP_STEP=4` (default 1). This way the group normally aligned at column 42 now gets aligned at column 44. This option can make the screen less "busy", but also introduce more whitespace.
 
 __TODO: Explain via `.ok` file and [SVG animation](https://nbedos.github.io/termtosvg/)__
 

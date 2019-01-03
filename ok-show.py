@@ -87,7 +87,7 @@ def set_indent(l, start, stop, max_pos, max_width):
         if item.t == 'code':
             item.set_indent(max_pos, max_width)
 
-def format_lines(l, elastic_tab, tab_stop_step, nr_positions_line_nr, max_width):
+def format_lines(l, elastic_tab, nr_positions_line_nr, max_width):
     if elastic_tab == 0: return
     if elastic_tab == 1: group_reset = ['heading','whitespace']
     if elastic_tab == 2: group_reset = ['heading']
@@ -105,7 +105,6 @@ def format_lines(l, elastic_tab, tab_stop_step, nr_positions_line_nr, max_width)
             if has_no_next_item or l[i+1].t in group_reset:
                 max_command_width = max_width - nr_positions_line_nr - len('. ')
                 # indent only at certain positions
-                max_pos += (tab_stop_step - 1) - (max_pos % tab_stop_step)
                 set_indent(l, start_group, i+1, max_pos, max_command_width)
                 start_group = None #reset start code-block
 
@@ -136,14 +135,12 @@ def main():
     parser = argparse.ArgumentParser(description='Show the ok-file colorized (or just one line).')
     parser.add_argument('--verbose',        '-v', metavar='V', type=int, default=1, help='0=quiet, 1=normal, 2=verbose. Defaults to 1. ')
     parser.add_argument('--comment_align',  '-c', metavar='CA', type=int, default=2, choices= [0,1,2,3], help='Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.')
-    parser.add_argument('--tab_stop_step',  '-s', metavar='TSS', type=int, default=1, choices=range(1, 26), help='At which column interval ($t) comments are indented. Default 1 (value 5 aligns at 5, 10, 15 etc.). Legal: 1..25.')
     parser.add_argument('--terminal_width', '-t', metavar='TW', type=int, default=230, help='number of columns of the terminal (tput cols)')
     parser.add_argument('only_line_nr', metavar='N', type=int, nargs='?', help='the line number to show')
     args = parser.parse_args()
 
     if args.verbose > 1:
         print('comment_align:', args.comment_align)
-        print('tab_stop_step:', args.tab_stop_step)
         print('terminal_width:', args.terminal_width)
 
     #setup UTF-8
@@ -158,7 +155,7 @@ def main():
     p_lines = parse_lines(lines)
     cmd_lines = [pl.line_nr for pl in p_lines if pl.line_nr]
     nr_positions_line_nr = len(str(max(cmd_lines))) if len(cmd_lines)>0 else 0
-    format_lines(p_lines, args.comment_align, args.tab_stop_step, nr_positions_line_nr, args.terminal_width)
+    format_lines(p_lines, args.comment_align, nr_positions_line_nr, args.terminal_width)
 
     # execute
     if args.only_line_nr is None:

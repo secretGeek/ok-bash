@@ -27,7 +27,6 @@ command (use one):
   h, help             Show this usage page.
 options:
   -c, --comment_align N  Level of comment alignment. See \$_OK_COMMENT_ALIGN
-  -s, --tab_stop_step N  At which column interval comments are indented. See \$_OK_TAB_STOP_STEP
   -v, --verbose       Show more output, mostly errors. Also it shows environment-variables in this screen.
   -q, --quiet         Only show really necessary output, so surpress echoing the command.
   -f, --file <file>   Use a custom file instead of '.ok'; use '-' for stdin
@@ -37,7 +36,6 @@ script-arguments:
 
         if [[ $verbose -ge 2 ]]; then
             if [ -z ${_OK_COMMENT_ALIGN+x} ];  then local e="unset";  else local e="$_OK_COMMENT_ALIGN"; fi
-            if [ -z ${_OK_TAB_STOP_STEP+x} ];  then local t="unset";  else local t="$_OK_TAB_STOP_STEP"; fi
             if [ -z ${_OK_PROMPT+x} ];         then local p="unset";  else local p="'$_OK_PROMPT'"; fi
             if [ -z ${_OK_VERBOSE+x} ];        then local v="unset";  else local v="$_OK_VERBOSE"; fi
             if [ -z ${_OK_PROMPT_DEFAULT+x} ]; then local l="unset";  else local l="$_OK_PROMPT_DEFAULT"; fi
@@ -49,7 +47,6 @@ script-arguments:
   _OK_C_PROMPT       ${_OK_C_PROMPT}Color-code${c_nc} for prompt (both input as command confirmation). Defaults to color for numbering.
 environment variables (other configuration):
   _OK_COMMENT_ALIGN  Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
-  _OK_TAB_STOP_STEP  At which column interval ($t) comments are indented. Default 1 (value 5 aligns at 5, 10, 15 etc.). Legal: 1..25. 
   _OK_PROMPT         String ($p) used as prompt (both input as command confirmation). Defaults to '$ '.
   _OK_PROMPT_DEFAULT Setting ($l) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
   _OK_VERBOSE        Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
@@ -70,7 +67,7 @@ environment variables (for internal use):
         shift
         # get the line to be executed
         local line_text
-        line_text="$(cat "$ok_file" | "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -s "$tab_stop_step" -t "$(tput cols)" "$line_nr")"
+        line_text="$(cat "$ok_file" | "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$(tput cols)" "$line_nr")"
         local res=$?
         if [[ $res -ne 0 ]]; then
             #because stdout/stderr are swapped by ok-show.py in this case, handle this too
@@ -83,7 +80,7 @@ environment variables (for internal use):
     function _ok_cmd_list {
         unset -f _ok_cmd_list
 
-        cat "$ok_file" | "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -s "$tab_stop_step" -t "$(tput cols)" || return $?
+        cat "$ok_file" | "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$(tput cols)" || return $?
     }
 
     # export variables because python is a sub-process, and variables might have changed since initialization
@@ -114,7 +111,6 @@ environment variables (for internal use):
     local once_check=0
     local show_prompt=${_OK_PROMPT_DEFAULT}
     local comment_align=${_OK_COMMENT_ALIGN:-1}
-    local tab_stop_step=${_OK_TAB_STOP_STEP:-1}
     local usage_error=
     local loop_args=1 #the Pascal-way to break loops
     while (( $# > 0 && loop_args == 1 )) ; do
@@ -135,7 +131,6 @@ environment variables (for internal use):
                 -v | --verbose)    verbose=2;;
                 -q | --quiet)      verbose=0;;
                 -c | --comment_align) if [[ $# -ge 2 ]]; then comment_align=$2; shift; else echo "the $1 argument needs a number (0..3) as 2nd argument"; fi;;
-                -s | --tab_stop_step) if [[ $# -ge 2 ]]; then tab_stop_step=$2; shift; else echo "the $1 argument needs a number (1..25) as 2nd argument"; fi;;
                 -f | --file)       if [[ $# -gt 1 && -r "$2" || "-" == "$2" ]]; then ok_file="$2"; shift; else _ok_cmd_usage "No file provided, or file is not readable ($2)" || return $?; fi;;
                 -a | --alias)      if [[ $# -gt 1 && -n "$2" ]]; then args="$2"; shift; else _ok_cmd_usage "Empty or no alias provided" || return $?; fi;;
                 *)                 cmd=usage; usage_error="Unknown command/option '$1'";;
@@ -206,7 +201,6 @@ arguments, if you need to customize (these can also be set via arguments/environ
   prompt_default   Prompt default when issueing running ok without arguments
   auto_show        Perform 'ok list-once' every time the prompt is shown (modifies \$PROMPT_COMMAND)
   comment_align N  Level of comment alignment. See \$_OK_COMMENT_ALIGN
-  tab_stop_step N  At which column interval comments are indented. See \$_OK_TAB_STOP_STEP
   comment_align N  Level of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
   verbose          Enable verbose mode
   quiet            Enable quiet mode\\n"
@@ -223,7 +217,6 @@ else
             prompt)         if [[ $# -ge 2 ]]; then export _OK_PROMPT=$2; shift; else echo "the prompt argument needs the actual prompt as 2nd argument"; fi;;
             prompt_default) export _OK_PROMPT_DEFAULT=1;;
             comment_align)  if [[ $# -ge 2 ]]; then export _OK_COMMENT_ALIGN=$2; shift; else echo "the comment_align argument needs a number (0..3) as 2nd argument"; fi;;
-            tab_stop_step)  if [[ $# -ge 2 ]]; then export _OK_TAB_STOP_STEP=$2; shift; else echo "the tab_stop_step argument needs a number (1..25) as 2nd argument"; fi;;
             verbose)        export _OK_VERBOSE=2;;
             quiet)          export _OK_VERBOSE=0;;
             auto_show)      if [[ ! $PROMPT_COMMAND =~ $re_list_once ]]; then export PROMPT_COMMAND="${PROMPT_COMMAND}"$'\n'"${re_list_once}"; fi;;

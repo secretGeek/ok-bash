@@ -178,7 +178,7 @@ If you want to play around with the installation helpers, `reset` as argument wi
 
     . ~/path/to/ok-bash/ok.sh reset prompt '>>>' auto_show
 
-You can make `ok` more "verbose" or more "quiet" by the options with the same name. More verbose mostly means an error message will be written to `stderr`. This might help you to understand ok's behaviour better. For example `ok 12345` will do nothing and exit with exit-code 2, but `ok -v 12345` will complaint with `ERROR: entered line number '12345' does not exist`.
+You can make `ok` more "verbose" or more "quiet" by the options with the same name. More verbose mostly means an error message will be written to `stderr`. This might help you to understand ok's behaviour better. For example `ok 12345` will do nothing and exit with exit-code 2, but `ok -v 12345` will complain with `ERROR: entered line number '12345' does not exist`.
 
 Also as demonstrated in the beginning of this _Customization_ chapter, the help-screen will show the used environment-variabels when specifing `-v` or `--verbose`. 
 
@@ -189,9 +189,7 @@ You can specify the verbose/quiet-options as installation helper, environment va
 
 ### Customizing formatting and colors
 
-Finally you can customize colors and formatting. I'll start with aligning comments, which can be indented, so they start on the same column. You can switch it off (0), align comment blocks (1 and also default), ditto but comment blocks may also contain empty lines (2) or align all comments on the same column (3). There is also "wrap protection": if indentation would cause the line to wrap, that line would be indented less.
-
-To align all comments:
+Finally you can customize colors and formatting. I'll start with aligning comments, which can be indented, so they start on the same column. To align all comments:
 
     . ~/path/to/ok-bash/ok.sh comment_align 3
 
@@ -199,7 +197,11 @@ You can also do this by setting an environment variable:
 
     _OK_COMMENT_ALIGN=3
 
-__TODO: Explain via `.ok` file and [SVG animation](https://nbedos.github.io/termtosvg/)__
+You have multiple "levels" of alignment. You can switch alignment off (0); align comment blocks (1 and also default), ditto but comment blocks may also contain empty lines (2) or align all comments on the same column (3). There is also "wrap protection": if indentation would cause the line to wrap, that line would be indented less.
+
+This different setting are best explained visually:
+
+![Demo in `demo/fmt/.ok`](demo/fmt/termtosvg_demo_fmt.svg)
 
 There are no installation helpers for setting colors at the moment. You can control the colors with the `_OK_C_*` variables shown with the command `ok -v -h`.
 The easiest way to determine colors is with [`tput`](https://www.tldp.org/HOWTO/Bash-Prompt-HOWTO/x405.html):
@@ -236,3 +238,6 @@ You can think up anything you want; the sky is the limit. I intent to keep a lis
 
 For testing: if you don't want to source the script after every change you make: you can run `./ok.sh test ...` as a shortcut. This starts a sub-shell, so there won't be any side effects (like `cd`).
 
+## End notes
+
+The SVG terminal animations were made with the excellent [termtosvg](https://nbedos.github.io/termtosvg/).

@@ -201,7 +201,7 @@ You have multiple "levels" of alignment. You can switch alignment off (0); align
 
 This different setting are best explained visually:
 
-![Demo in `demo/fmt/.ok`](demo/fmt/termtosvg_demo_fmt.svg)
+<p><img src="demo/fmt/termtosvg_demo_fmt.svg" alt="Interaction of file `demo/fmt/.ok` visualized"></p>
 
 There are no installation helpers for setting colors at the moment. You can control the colors with the `_OK_C_*` variables shown with the command `ok -v -h`.
 The easiest way to determine colors is with [`tput`](https://www.tldp.org/HOWTO/Bash-Prompt-HOWTO/x405.html):

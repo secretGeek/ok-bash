@@ -73,7 +73,7 @@ The first line adds a "heading" to the `.ok` file, which is nice to keep the fil
 
 Also, I use single quotes `'`, so no funny things happen to the string, before it ends up in your `.ok` file. This way, `$USER` and `$(date...)` are evaluated when the `ok` command is run, not when you add the line to the `.ok` file.
 
-What to put in these `.ok` files? Good places to start are the `history` file on the servers you manage. You could also take a look what commands are burried in your documentation. Even adding a script file with a comment and grouped under the correct heading can be really helpfull.
+What to put in these `.ok` files? A good place to start is the projects documentation: search for all commands that are buried in there. Even add running a script file with a comment (and grouped under the correct heading) can be really helpfull. And whenever you `man` a command or search Google for it, remember to check if it's worth to add it to your `.ok` file. It probably is. And it's easy to remove again.
 
 After that you can look at customization. This allows you to do things such as:
 
@@ -146,7 +146,7 @@ So if you want to change the prompt to `% ` and want `ok` to prompt for a line n
 
     . ~/path/to/ok-bash/ok.sh prompt "% " prompt_default
 
-The example from the beginning of this README will look like the following (the `$` is bash' prompt, and the `%` is ok's prompt; we just changed the prompt, remember?):
+The example from the beginning of this README will look like the following (the `$` is bash' prompt, and the `%` is ok's prompt now; we just changed the prompt, remember?):
 
     $ ok
     1. ./build.sh            # builds the project
@@ -168,7 +168,7 @@ Instead of using the installation helper, this can also be done by the following
 
 Using an installation helper is a bit shorter, right?
 
-If you automatically want to see the `.ok` file when it's present when you change the current directory, you can use the `auto_show` helper:
+If you automatically want to see the `.ok` file when it's present when you change the current directory, _like a menu_, you can use the `auto_show` helper:
 
     . ~/path/to/ok-bash/ok.sh auto_show
 
@@ -199,7 +199,7 @@ You can also do this by setting an environment variable:
 
 You have multiple "levels" of alignment. You can switch alignment off (0); align comment blocks (1 and also default), ditto but comment blocks may also contain empty lines (2) or align all comments on the same column (3). There is also "wrap protection": if indentation would cause the line to wrap, that line would be indented less.
 
-This different setting are best explained visually:
+This different setting are best explained visually (see the file `demo/fmt/.ok`):
 
 <p><img src="https://blog.zanstra.com/ok-bash/demo/fmt/termtosvg_demo_fmt.svg" alt="Interaction of file `demo/fmt/.ok` visualized"></p>
 
@@ -218,7 +218,7 @@ To explain the file/alias argument options, I will start with this example:
 
     alias SSH='ok --verbose --file ~/.ssh/.ok --alias SSH'
 
-This will create the alias `SSH`, which will show a list of all _ssh_ connections and/or let you establish a connection to one. The `--file ~/.ssh/.ok` tells `ok-bash` to look for the `.ok` file in that absolute path. The `--alias SSH` arugment tells the alias what it's name is (in bash, normally an alias can't find it's own name unless it's been told so). The `--verbose` option will make `ok-bash` very vocal about any mistake you might make.
+This will create the alias `SSH`, which will show a list of all _ssh_ connections and/or let you establish a connection to one. The `--file ~/.ssh/.ok` tells `ok-bash` to look for the `.ok` file in that absolute path. The `--alias SSH` argument tells the alias what it's name is (in bash, normally an alias doesn't know it's own name unless it's been told so). The `--verbose` option will make `ok-bash` very vocal about any mistake you might make.
 
 Besides creating this alias, you also need to populate the `~/.ssh/.ok` file yourself. You could also generate this list from your `~/.ssh/config` file, but this works for me. I've grouped my connections in the `~/.ssh/.ok` file like this:
 

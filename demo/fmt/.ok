@@ -1,0 +1,11 @@
+export PS1='> ' # Hide computer details in demo
+export _OK_VERBOSE=0 # No echoing the command
+# Demo of comment indentation
+ok list --comment_align 0 #No indentation
+ok l --comment_align 1 #Group adjecent indentations
+ok --comment_align 2 #Same, but including empty lines
+
+ok l --comment_align 3 #Everything indented
+# Another heading
+echo "testing" #testing
+echo "second line" #also testing

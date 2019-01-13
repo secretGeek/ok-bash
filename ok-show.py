@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python #both python2 and python3
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
@@ -100,7 +100,7 @@ def format_lines(l, elastic_tab, nr_positions_line_nr, max_width):
             max_pos = ansi_len(x.line)+1 if x.pos is None else x.pos
         if start_group is not None: # We are in a group
             if x.t == 'code':
-                max_pos = max(max_pos, x.pos)
+                max_pos = max(max_pos, 0 if x.pos is None else x.pos)
             has_no_next_item = i+1>=len(l)
             if has_no_next_item or l[i+1].t in group_reset:
                 max_command_width = max_width - nr_positions_line_nr - len('. ')

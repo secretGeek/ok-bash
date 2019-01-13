@@ -118,6 +118,8 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
       -q, --quiet         Only show really necessary output, so surpress echoing the command.
       -f, --file <file>   Use a custom file instead of '.ok'; use '-' for stdin
       -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
+      -V, --version       Show version number and exit
+      -h, --help          Show this help screen
     script-arguments:
       ...                 These are passed through, when a line is executed (you can enter these too at the ok-prompt)
 

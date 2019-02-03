@@ -236,7 +236,7 @@ You can think up anything you want; the sky is the limit. I intent to keep a lis
 
 ## Development
 
-`ok` should run on a standard _Linux_  or _macOS_ installation. That means minimum _bash 3.2_ and _python 2.7_. 
+`ok` should run on a standard _Linux_  or _macOS_ installation. That means minimum _bash 3.2_ and _python 2.7_ (python code should also work in _python 3.5+_). 
 
 For testing: if you don't want to source the script after every change you make: you can run `./ok.sh test ...` as a shortcut. This starts a sub-shell, so there won't be any side effects (like `cd`).
 

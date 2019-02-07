@@ -7,6 +7,9 @@ pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null;
 _OK__PATH_TO_ME=$(pwd)
 popd > /dev/null;
 
+# Don't let ok-show.py's shebang control the python version
+_OK__PATH_TO_PYTHON=$(command -v python)
+
 
 ok() {
     function _ok_cmd_usage {
@@ -54,7 +57,8 @@ environment variables (other configuration):
   _OK_VERBOSE        Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
 environment variables (for internal use):
   _OK__LAST_PWD      Remember the path ($_OK__LAST_PWD) that was last listed, for use with the list-once command.
-  _OK__PATH_TO_ME    The path ($_OK__PATH_TO_ME) to the location of this script.\\n"
+  _OK__PATH_TO_ME    The path ($_OK__PATH_TO_ME) to the location of this script.
+  _OK__PATH_TO_PYTHON The path ($_OK__PATH_TO_PYTHON) to the used python interpreter.\\n"
         fi
         if [[ -n $1 ]]; then
             echo -e "$1\\n"
@@ -69,7 +73,7 @@ environment variables (for internal use):
         shift
         # get the line to be executed
         local line_text
-        line_text="$(cat "$ok_file" | "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$(tput cols)" "$line_nr")"
+        line_text="$(cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$(tput cols)" "$line_nr")"
         local res=$?
         if [[ $res -ne 0 ]]; then
             #because stdout/stderr are swapped by ok-show.py in this case, handle this too
@@ -82,7 +86,7 @@ environment variables (for internal use):
     function _ok_cmd_list {
         unset -f _ok_cmd_list
 
-        cat "$ok_file" | "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$(tput cols)" || return $?
+        cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$(tput cols)" || return $?
     }
 
     # export variables because python is a sub-process, and variables might have changed since initialization
@@ -190,7 +194,7 @@ environment variables (for internal use):
 }
 
 if [[ "$called" == "$0" ]]; then
-    if [[ -z $(command -v python) ]]; then
+    if [[ -z "$_OK__PATH_TO_PYTHON" ]]; then
         >&2 echo "ERROR: python is required to run 'ok', but can't be found"
         exit 1
     fi

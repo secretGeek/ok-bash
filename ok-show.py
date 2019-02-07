@@ -1,4 +1,4 @@
-#!/usr/bin/env python #both python2 and python3
+# both python2 and python3
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function

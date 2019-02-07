@@ -118,6 +118,8 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
       -q, --quiet         Only show really necessary output, so surpress echoing the command.
       -f, --file <file>   Use a custom file instead of '.ok'; use '-' for stdin
       -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
+      -V, --version       Show version number and exit
+      -h, --help          Show this help screen
     script-arguments:
       ...                 These are passed through, when a line is executed (you can enter these too at the ok-prompt)
 
@@ -234,7 +236,7 @@ You can think up anything you want; the sky is the limit. I intent to keep a lis
 
 ## Development
 
-`ok` should run on a standard _Linux_  or _macOS_ installation. That means minimum _bash 3.2_ and _python 2.7_. 
+`ok` should run on a standard _Linux_  or _macOS_ installation. That means minimum _bash 3.2_ and _python 2.7_ (python code should also work in _python 3.5+_). 
 
 For testing: if you don't want to source the script after every change you make: you can run `./ok.sh test ...` as a shortcut. This starts a sub-shell, so there won't be any side effects (like `cd`).
 

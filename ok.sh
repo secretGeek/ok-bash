@@ -31,6 +31,8 @@ options:
   -q, --quiet         Only show really necessary output, so surpress echoing the command.
   -f, --file <file>   Use a custom file instead of '.ok'; use '-' for stdin
   -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
+  -V, --version       Show version number and exit
+  -h, --help          Show this help screen
 script-arguments:
   ...                 These are passed through, when a line is executed (you can enter these too at the ok-prompt)\\n"
 
@@ -88,9 +90,10 @@ environment variables (for internal use):
         export "$x"="${!x}"
     done
 
+    local -r version="0.8.0"
     # used for colored output (see: https://stackoverflow.com/a/20983251/56)
     # notice: this is partly a duplication from code in ok-show.py
-    local c_nc=$(tput sgr0)
+    local -r c_nc=$(tput sgr0)
     if [ -z ${_OK_C_NUMBER+x} ];  then local c_number=$(tput setaf 6);  else local c_number=$_OK_C_NUMBER;   fi #NUMBER defaults to CYAN
     if [ -z ${_OK_C_PROMPT+x} ];  then local c_prompt=$c_number;        else local c_prompt=$_OK_C_PROMPT;   fi #PROMPT defaults to same color as NUMBER
     # other customizations (some environment variables can be overridden by arguments)
@@ -127,6 +130,7 @@ environment variables (for internal use):
                 p | list-prompt)   cmd=list; show_prompt=1; once_check=0;;
                 h | help)          cmd=usage;;
                 #options
+                -V | --version)    cmd=version;;
                 -\? | -h | --help) cmd=usage;;
                 -v | --verbose)    verbose=2;;
                 -q | --quiet)      verbose=0;;
@@ -141,6 +145,8 @@ environment variables (for internal use):
 
     if [[ $cmd == usage ]]; then
         _ok_cmd_usage "$usage_error" || return $?
+    elif [[ $cmd == version ]]; then
+        echo "ok-bash $version"
     elif [[ - == "$ok_file" || -r "$ok_file" ]]; then
         if [[ $cmd == run ]]; then
             _ok_cmd_run "$line_nr" "$@" || return $?

@@ -9,7 +9,7 @@ See <http://secretgeek.net/ok> for the blog post launching (and describing) "ok"
 
 Do you work on many different projects? And in each project, are there commands you use that are specific to that project? You need a `.ok` file.
 
-A `.ok` file holds a bunch of handy one-liners, specific to the folder it is in. It can be viewed with a simple command. Any command can be executed with the command `ok <number>` (example, `ok 3` to run the 3rd command.)
+An `.ok` file holds a bunch of handy one-liners, specific to the folder it is in. It can be viewed with a simple command. Any command can be executed with the command `ok <number>` (example, `ok 3` to run the 3rd command.)
 
 Imagine your `.ok` file contains these three lines:
 
@@ -17,9 +17,11 @@ Imagine your `.ok` file contains these three lines:
     ./deploy.sh # deploys the project
     ./commit_push.sh "$1" # commit with comment, rebase and push
 
-A `.ok` file acts as a neat place to document how a given project works. This is useful if you have many projects, or many people working on a project. It's such a little file; it's quick to write and easy to edit.
+You can run those commands with "`ok 1`", "`ok 2`" or "`ok 3 'oops!'`", respectively.
 
-But it's not just a document, it's executable.
+An `.ok` file acts as a neat place to document how a given project works. This is useful if you have many projects, or many people working on a project. It's such a little file; it's so quick to write and so easy to edit.
+
+It's better than normal documentation: it's executable.
 
 If you run the command `ok` (with no parameters) you'll see the file listed, with numbers against each command:
 
@@ -27,6 +29,8 @@ If you run the command `ok` (with no parameters) you'll see the file listed, wit
     1. ./build.sh            # builds the project
     2. ./deploy.sh           # deploys the project
     3. ./commit_push.sh "$1" # commit with comment, rebase and push
+
+(It will also be stylishly formatted, to make it easier to read at a glance)
 
 Then if you run `ok <number>` (ok followed by a number) you'll execute that line of the file.
 
@@ -51,11 +55,11 @@ And you can pass simple arguments to the commands. For example:
 
 Clone the git-repository (`git clone https://github.com/secretGeek/ok-bash.git`), so you can easily update it with a `git pull`.
 
-Install it by "." (i.e. source) the "ok.sh" script from your `~/.profile` (or your favorite initialization script), e.g:
+Install it by "." (i.e. dot-sourcing) the "ok.sh" script from your `~/.profile` (or your favorite initialization script), e.g:
 
     . ~/path/to/ok-bash/ok.sh
 
-💡 Pro tip: The script needs to be "sourced", otherwise commands like `cd` and `export` in your `.ok` file wouldn't have  any effect.
+💡 Pro tip: The script needs to be "sourced", otherwise commands like `cd` and `export` in your `.ok` file wouldn't have any effect.
 
 For more advanced installation options, check out the section _customization_ below.
 
@@ -64,12 +68,12 @@ For more advanced installation options, check out the section _customization_ be
 
 You can try out the included `.ok` file by navigating to `~/path/to/ok-bash` and type `ok`. Explore some of the options.
 
-Next you can create your own `.ok` file. Navigate to the folder where you want to store it, and run for example:
+Next you can create your own `.ok` file. Navigate to any folder where you want to use `ok`, and run for example:
 
     echo '# My first ok-command'>>.ok
     echo 'echo "Hi $USER, the time when pressed enter was $(date "+%H:%M:%S")"'>>.ok
 
-The first line adds a "heading" to the `.ok` file, which is nice to keep the file organized. I used append redirect (`>>.ok`) to append a line to the `.ok` file. When the file doesn't exist, it's created. 
+The first line adds a "heading" to the `.ok` file, which is nice to keep the file organized. I used append redirect (`>>.ok`) to append a line to the `.ok` file. When the file doesn't exist, it's created.
 
 Also, I use single quotes `'`, so no funny things happen to the string, before it ends up in your `.ok` file. This way, `$USER` and `$(date...)` are evaluated when the `ok` command is run, not when you add the line to the `.ok` file.
 
@@ -86,7 +90,7 @@ After that you can look at customization. This allows you to do things such as:
 
 If you tried to run the script directly, you might have noticed there are some options to customize `ok`. Let's show the output here:
 
-    $ ./ok.sh 
+    $ ./ok.sh
     tip: "." (i.e. source) this file from your ~/.profile, e.g. ". /path/to/ok-bash/ok.sh <arguments>"
 
     arguments, if you need to customize (these can also be set via arguments/environment):
@@ -98,7 +102,7 @@ If you tried to run the script directly, you might have noticed there are some o
       verbose          Enable verbose mode
       quiet            Enable quiet mode
 
-The options shown here are called _installation helpers_. Because it's likely you want to install this tool on all your machines, the customization is optimized to fit on one line for easy copy-'n'-pasting! 
+The options shown here are called _installation helpers_. Because it's likely you want to install this tool on all your machines, the customization is optimized to fit on one line for easy copy-'n'-pasting!
 
 Before I explain these helpers, I'd like to show the `ok`-command help screen, because they are related:
 
@@ -139,7 +143,7 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
       _OK__PATH_TO_ME    The path (/path/to/ok-bash) to the location of this script.
 
 
-How this all works together is explained below. 
+How this all works together is explained below.
 
 
 ### Customizing behaviour
@@ -182,7 +186,7 @@ If you want to play around with the installation helpers, `reset` as argument wi
 
 You can make `ok` more "verbose" or more "quiet" by the options with the same name. More verbose mostly means an error message will be written to `stderr`. This might help you to understand ok's behaviour better. For example `ok 12345` will do nothing and exit with exit-code 2, but `ok -v 12345` will complain with `ERROR: entered line number '12345' does not exist`.
 
-Also as demonstrated in the beginning of this _Customization_ chapter, the help-screen will show the used environment-variabels when specifing `-v` or `--verbose`. 
+Also as demonstrated in the beginning of this _Customization_ chapter, the help-screen will show the used environment-variabels when specifing `-v` or `--verbose`.
 
 The `-q` or `--quiet` option will suppress output from `ok-bash` itself. So when you run `ok -q 1` the command on line 1 will be executed, but `ok-bash` will not echo the command to the screen.
 
@@ -236,7 +240,7 @@ You can think up anything you want; the sky is the limit. I intent to keep a lis
 
 ## Development
 
-`ok` should run on a standard _Linux_  or _macOS_ installation. That means minimum _bash 3.2_ and _python 2.7_ (python code should also work in _python 3.5+_). 
+`ok` should run on a standard _Linux_  or _macOS_ installation. That means minimum _bash 3.2_ and _python 2.7_ (python code should also work in _python 3.5+_).
 
 For testing: if you don't want to source the script after every change you make: you can run `./ok.sh test ...` as a shortcut. This starts a sub-shell, so there won't be any side effects (like `cd`).
 

@@ -5,6 +5,8 @@ See <http://secretgeek.net/ok> for the blog post launching (and describing) "ok"
 
 ## "ok" gives you .ok folder profiles for bash
 
+(There is also a [PowerShell version](https://github.com/secretGeek/ok-ps/))
+
 `ok` makes you smarter and more efficient.
 
 Do you work on many different projects? And in each project, are there commands you use that are specific to that project? You need a `.ok` file.

@@ -116,7 +116,7 @@ environment variables (for internal use):
     local cmd=list
     local line_nr=0
     local once_check=0
-    local show_prompt=${_OK_PROMPT_DEFAULT}
+    local show_prompt=${_OK_PROMPT_DEFAULT:-0}
     local comment_align=${_OK_COMMENT_ALIGN:-1}
     local usage_error=
     local loop_args=1 #the Pascal-way to break loops

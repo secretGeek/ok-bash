@@ -7,8 +7,8 @@ pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null;
 _OK__PATH_TO_ME=$(pwd)
 popd > /dev/null;
 
-# Don't let ok-show.py's shebang control the python version
-_OK__PATH_TO_PYTHON=$(command -v python)
+# Don't let ok-show.py's shebang control the python version; prefer python3 above python regular (2)
+_OK__PATH_TO_PYTHON=$(command -v python3 || command -v python)
 
 
 ok() {

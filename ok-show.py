@@ -151,12 +151,12 @@ def main():
     except UnicodeDecodeError as err:
         print('UTF-8 (unicode) should be used as sole encoding for .ok-files', file=sys.stderr)
         if args.verbose > 1:
-            print(f'UnicodeDecodeError exception properties (error on: {err.object[err.start:err.end]}):', file=sys.stderr)
-            print(f'* encoding: {err.encoding}', file=sys.stderr)
-            print(f'* reason__: {err.reason}',   file=sys.stderr)
-            print(f'* object__: {err.object}',   file=sys.stderr)
-            print(f'* start___: {err.start}',    file=sys.stderr)
-            print(f'* end_____: {err.end}',      file=sys.stderr)
+            print('UnicodeDecodeError exception properties (error on: %s):' % err.object[err.start:err.end], file=sys.stderr)
+            print('* encoding: %s' % err.encoding, file=sys.stderr)
+            print('* reason__: %s' % err.reason,   file=sys.stderr)
+            print('* object__: %s' % err.object,   file=sys.stderr)
+            print('* start___: %s' % err.start,    file=sys.stderr)
+            print('* end_____: %s' % err.end,      file=sys.stderr)
         exit(1)
     p_lines = parse_lines(lines)
     cmd_lines = [pl.line_nr for pl in p_lines if pl.line_nr]

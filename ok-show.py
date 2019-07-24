@@ -143,15 +143,21 @@ def main():
         print('comment_align:', args.comment_align)
         print('terminal_width:', args.terminal_width)
 
-    #setup UTF-8
-    if sys.stdin.encoding != 'UTF-8':
-        sys.stdin = codecs.getreader('utf8')(sys.stdin, 'strict')
-    if sys.stdout.encoding != 'UTF-8':
-        sys.stdout = codecs.getwriter('utf-8')(sys.stdout, 'strict')
-    if sys.stderr.encoding != 'UTF-8':
-        sys.stderr = codecs.getwriter('utf-8')(sys.stderr, 'strict')
-    # prepare
-    lines = sys.stdin.readlines()
+    # prepare (read stdin parse, transform, and calculate stuff)
+    # Unicode: best to ignore other encodings? SO doesn't seem to give good advice
+    # See https://stackoverflow.com/q/2737966/56
+    try:
+        lines = sys.stdin.readlines()
+    except UnicodeDecodeError as err:
+        print('UTF-8 (unicode) should be used as sole encoding for .ok-files', file=sys.stderr)
+        if args.verbose > 1:
+            print(f'UnicodeDecodeError exception properties (error on: {err.object[err.start:err.end]}):', file=sys.stderr)
+            print(f'* encoding: {err.encoding}', file=sys.stderr)
+            print(f'* reason__: {err.reason}',   file=sys.stderr)
+            print(f'* object__: {err.object}',   file=sys.stderr)
+            print(f'* start___: {err.start}',    file=sys.stderr)
+            print(f'* end_____: {err.end}',      file=sys.stderr)
+        exit(1)
     p_lines = parse_lines(lines)
     cmd_lines = [pl.line_nr for pl in p_lines if pl.line_nr]
     nr_positions_line_nr = len(str(max(cmd_lines))) if len(cmd_lines)>0 else 0

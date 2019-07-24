@@ -1,5 +1,7 @@
+termtosvg termtosvg_demo_fmt.svg -g 15x75 -t window_frame_js
 export PS1='> ' # Hide computer details in demo
 export _OK_VERBOSE=0 # No echoing the command
+printf '\e[8;15;75t\e[2J\e[;H' # Resize current window + clear screen
 # Demo of comment indentation
 ok list --comment_align 0 # No indentation
 ok l --comment_align 1 # Group adjecent indentations

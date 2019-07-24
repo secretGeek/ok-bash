@@ -10,9 +10,9 @@ _OK_PROMPT="% "; _OK_VERBOSE=0; _OK_PROMPT_DEFAULT=0; _OK_COMMENT_ALIGN=0 # Show
 # Tests arguments passing (you can pass arguments after <number>, both at the bash-prompt and the ok-prompt)
 echo "Passed arguments: 1:[$1], 2:[$2], 3:[$3], 4+:[${*:4}] (nr args: $#)" # Comment-color starts too early; clearly a bug (so better
 echo "All passed arguments (no comment on this line): [$*]"
+cd test
 
 ok help --verbose # Show help page of 🆗, including environment variables
-export PYTHONIOENCODING="UTF-8" # When set, ok doesn't accept nothing but UTF-8 files and will raise an error otherwise (python3). When not set, or python2, you get question marks
 set | grep "^_OK_" # Show all set environment variables, used with ok-bash
 echo -e "$PROMPT_COMMAND" # This variable can be changed with the reset/auto_show install helpers
 alias SSH='ok -v -f ~/.ssh/.ok -a SSH' # Keep a list of all your `ssh` connections; use it via `SSH`

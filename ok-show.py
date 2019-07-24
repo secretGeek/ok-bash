@@ -149,7 +149,7 @@ def main():
     try:
         lines = sys.stdin.readlines()
     except UnicodeDecodeError as err:
-        print('UTF-8 (unicode) should be used as sole encoding for .ok-files', file=sys.stderr)
+        print('ERROR: UTF-8 (unicode) should be used as sole encoding for .ok-files', file=sys.stderr)
         if args.verbose > 1:
             print('UnicodeDecodeError exception properties (error on: %s):' % err.object[err.start:err.end], file=sys.stderr)
             print('* encoding: %s' % err.encoding, file=sys.stderr)

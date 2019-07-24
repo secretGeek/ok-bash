@@ -1,3 +1,4 @@
 # A full Unicode UTF-8 encoded .ok-file
+export PYTHONIOENCODING="UTF-8" 
 echo "Hi ㋛, how is it going?"
 echo "Ⓘ  ⓐ ⓜ   ⓦ ⓔ ⓛ ⓛ ,   🅣 🅗 🅐 🅽 🅚   🆈 🅾 🆄 ❕"

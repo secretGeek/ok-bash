@@ -1,4 +1,5 @@
 # This file is encoded with ISO-8859-1 (or Western ISO Latin 1)
+export PYTHONIOENCODING="latin_1"
 echo "A0-AF: абвгдезийклмноп (including NO-BREAK SPACE and SOFT HYPHEN)"
 echo "B0-BF: ░▒▓│┤╡╢╖╕╣║╗╝╜╛┐"
 echo "C0-CF: └┴┬├─┼╞╟╚╔╩╦╠═╬╧"

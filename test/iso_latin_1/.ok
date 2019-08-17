@@ -1,0 +1,8 @@
+# This file is encoded with ISO-8859-1 (or Western ISO Latin 1)
+export PYTHONIOENCODING="latin_1"
+echo "A0-AF:  ΅Ά£¤¥§¨©ª«¬­®― (including NO-BREAK SPACE and SOFT HYPHEN)"
+echo "B0-BF: °±²³΄µ¶·ΈΉΊ»Ό½ΎΏ"
+echo "C0-CF: ΐΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟ"
+echo "D0-DF: ΠΡÒΣΤΥΦΧΨΩΪΫάέήί (look at that MULTIPLICATION SIGN)"
+echo "E0-EF: ΰαβγδεζηθικλμνξο"
+echo "F0-FF: πρςστυφχψωϊϋόύώÿ (the DIVISION SIGN is placed in the middle)"

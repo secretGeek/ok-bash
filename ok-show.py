@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-import argparse, codecs, os, re, sys
+import argparse, codecs, os, re, shutil, sys
 
 def ansi_len(s):
     no_ansi_s = rx.ansi_len.sub('', s)
@@ -130,12 +130,12 @@ def print_line(l, clr, nr_positions_line_nr, format_line):
 def main():
     # customizations
     clr = ok_color()
-
+    terminal_size = shutil.get_terminal_size()
     # handle arguments
     parser = argparse.ArgumentParser(description='Show the ok-file colorized (or just one line).')
     parser.add_argument('--verbose',        '-v', metavar='V', type=int, default=1, help='0=quiet, 1=normal, 2=verbose. Defaults to 1. ')
     parser.add_argument('--comment_align',  '-c', metavar='CA', type=int, default=2, choices= [0,1,2,3], help='Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.')
-    parser.add_argument('--terminal_width', '-t', metavar='TW', type=int, default=230, help='number of columns of the terminal (tput cols)')
+    parser.add_argument('--terminal_width', '-t', metavar='TW', type=int, default=terminal_size.columns, help='number of columns of the terminal (tput cols)')
     parser.add_argument('only_line_nr', metavar='N', type=int, nargs='?', help='the line number to show')
     args = parser.parse_args()
 

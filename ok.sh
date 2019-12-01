@@ -73,7 +73,7 @@ environment variables (for internal use):
         shift
         # get the line to be executed
         local line_text
-        line_text="$(cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$(tput cols)" "$line_nr")"
+        line_text="$(cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" "$line_nr")"
         local res=$?
         if [[ $res -ne 0 ]]; then
             #because stdout/stderr are swapped by ok-show.py in this case, handle this too
@@ -86,7 +86,7 @@ environment variables (for internal use):
     function _ok_cmd_list {
         unset -f _ok_cmd_list
 
-        cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$(tput cols)" || return $?
+        cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" || return $?
     }
 
     # export variables because python is a sub-process, and variables might have changed since initialization
@@ -97,8 +97,8 @@ environment variables (for internal use):
     local -r version="0.8.0"
     # used for colored output (see: https://stackoverflow.com/a/20983251/56)
     # notice: this is partly a duplication from code in ok-show.py
-    local -r c_nc=$(tput sgr0)
-    if [ -z ${_OK_C_NUMBER+x} ];  then local c_number=$(tput setaf 6);  else local c_number=$_OK_C_NUMBER;   fi #NUMBER defaults to CYAN
+    local -r c_nc='\[\e[0m\]'
+    if [ -z ${_OK_C_NUMBER+x} ];  then local c_number='\[\e[0;36m\]';   else local c_number=$_OK_C_NUMBER;   fi #NUMBER defaults to CYAN
     if [ -z ${_OK_C_PROMPT+x} ];  then local c_prompt=$c_number;        else local c_prompt=$_OK_C_PROMPT;   fi #PROMPT defaults to same color as NUMBER
     # other customizations (some environment variables can be overridden by arguments)
     if [ -z ${_OK_PROMPT+x} ];    then local prompt="$ ";               else local prompt=$_OK_PROMPT;       fi

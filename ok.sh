@@ -97,8 +97,8 @@ environment variables (for internal use):
     local -r version="0.8.0"
     # used for colored output (see: https://stackoverflow.com/a/20983251/56)
     # notice: this is partly a duplication from code in ok-show.py
-    local -r c_nc='\[\e[0m\]'
-    if [ -z ${_OK_C_NUMBER+x} ];  then local c_number='\[\e[0;36m\]';   else local c_number=$_OK_C_NUMBER;   fi #NUMBER defaults to CYAN
+    local -r c_nc=$'\033[0m'
+    if [ -z ${_OK_C_NUMBER+x} ];  then local c_number=$'\033[0;36m';    else local c_number=$_OK_C_NUMBER;   fi #NUMBER defaults to CYAN
     if [ -z ${_OK_C_PROMPT+x} ];  then local c_prompt=$c_number;        else local c_prompt=$_OK_C_PROMPT;   fi #PROMPT defaults to same color as NUMBER
     # other customizations (some environment variables can be overridden by arguments)
     if [ -z ${_OK_PROMPT+x} ];    then local prompt="$ ";               else local prompt=$_OK_PROMPT;       fi

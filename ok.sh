@@ -89,11 +89,6 @@ environment variables (for internal use):
         cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" || return $?
     }
 
-    # export variables because python is a sub-process, and variables might have changed since initialization
-    for x in $(set | grep "^_OK_" | awk -F '=' '{print $1}'); do 
-        export "${x?}"
-    done
-
     local -r version="0.8.0"
     # used for colored output (see: https://stackoverflow.com/a/20983251/56)
     # notice: this is partly a duplication from code in ok-show.py
@@ -236,7 +231,7 @@ else
         shift
     done
     unset re_list_once
-    # export variables so `ok` can be used from scripts as well
+    # export variables so `ok` can be used from scripts as well. Hereafter, exporting is the responsibility of the user.
     for x in $(set | grep "^_OK_" | awk -F '=' '{print $1}'); do 
         export "${x?}"
     done

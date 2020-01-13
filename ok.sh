@@ -3,9 +3,9 @@
 called=$_
 
 #basically, get the absolute path of this script (handy for loads of things)
-pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null || exit 1
+pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null || (>&2 echo "ok-bash: pushd failed")
 _OK__PATH_TO_ME=$(pwd)
-popd > /dev/null || exit 1
+popd > /dev/null || (>&2 echo "ok-bash: popd failed")
 
 # Don't let ok-show.py's shebang control the python version; prefer python3 above python regular (2)
 _OK__PATH_TO_PYTHON=$(command -v python3 || command -v python)

@@ -3,9 +3,9 @@
 called=$_
 
 #basically, get the absolute path of this script (handy for loads of things)
-pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null;
+pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null || exit 1
 _OK__PATH_TO_ME=$(pwd)
-popd > /dev/null;
+popd > /dev/null || exit 1
 
 # Don't let ok-show.py's shebang control the python version; prefer python3 above python regular (2)
 _OK__PATH_TO_PYTHON=$(command -v python3 || command -v python)
@@ -45,11 +45,11 @@ script-arguments:
             if [ -z ${_OK_VERBOSE+x} ];        then local v="unset";  else local v="$_OK_VERBOSE"; fi
             if [ -z ${_OK_PROMPT_DEFAULT+x} ]; then local l="unset";  else local l="$_OK_PROMPT_DEFAULT"; fi
             echo -e "environment variables (used for colored output; current colors are shown):
-  _OK_C_HEADING      ${_OK_C_HEADING}Color-code${c_nc} for lines starting with a comment (heading). Defaults to red.
-  _OK_C_NUMBER       ${_OK_C_NUMBER}Color-code${c_nc} for numbering. Defaults to cyan.
-  _OK_C_COMMENT      ${_OK_C_COMMENT}Color-code${c_nc} for comments after commands. Defaults to blue.
-  _OK_C_COMMAND      ${_OK_C_COMMAND}Color-code${c_nc} for commands. Defaults to color-reset.
-  _OK_C_PROMPT       ${_OK_C_PROMPT}Color-code${c_nc} for prompt (both input as command confirmation). Defaults to color for numbering.
+  _OK_C_HEADING      ${_OK_C_HEADING:-}Color-code${c_nc} for lines starting with a comment (heading). Defaults to red.
+  _OK_C_NUMBER       ${_OK_C_NUMBER:-}Color-code${c_nc} for numbering. Defaults to cyan.
+  _OK_C_COMMENT      ${_OK_C_COMMENT:-}Color-code${c_nc} for comments after commands. Defaults to blue.
+  _OK_C_COMMAND      ${_OK_C_COMMAND:-}Color-code${c_nc} for commands. Defaults to color-reset.
+  _OK_C_PROMPT       ${_OK_C_PROMPT:-}Color-code${c_nc} for prompt (both input as command confirmation). Defaults to color for numbering.
 environment variables (other configuration):
   _OK_COMMENT_ALIGN  Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
   _OK_PROMPT         String ($p) used as prompt (both input as command confirmation). Defaults to '$ '.
@@ -190,7 +190,8 @@ environment variables (for internal use):
             echo "Nothing to do: this folder doesn't have a readable '$ok_file' file"
         fi
     fi
-    export _OK__LAST_PWD=$(pwd)
+    _OK__LAST_PWD=$(pwd)
+    export _OK__LAST_PWD
 }
 
 if [[ "$called" == "$0" ]]; then

@@ -71,9 +71,11 @@ environment variables (for internal use):
         # save and remove argument. Remaining arguments are passwed to eval automatically
         local line_nr=$1 #LINE_NR is guaranteed to be 1 or more
         shift
+        local twidth
+        twidth="$(stty size|awk '{print $2}')"
         # get the line to be executed
         local line_text
-        line_text="$(cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" "$line_nr")"
+        line_text="$(cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$twidth" "$line_nr")"
         local res=$?
         if [[ $res -ne 0 ]]; then
             #because stdout/stderr are swapped by ok-show.py in this case, handle this too
@@ -85,8 +87,9 @@ environment variables (for internal use):
 
     function _ok_cmd_list {
         unset -f _ok_cmd_list
-
-        cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" || return $?
+        local twidth
+        twidth="$(stty size|awk '{print $2}')"
+        cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$twidth" || return $?
     }
 
     local -r version="0.8.0"

@@ -66,16 +66,16 @@ environment variables (for internal use):
         fi
     }
 
-    function _ok_show {
-        unset -f _ok_show
+    function ok_show {
         local twidth
-        local input="$ok_file"
-        if [[ $input = - ]]; then
+        local input="${1:--}"
+        shift
+        if [[ $input = - ]]; then # Prevent shellcheck's "useless cat"-warning
             input="/dev/stdin"
         fi
         twidth="$(stty size|awk '{print $2}')"
-        
-        "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$twidth" "$@" < "${input}"
+
+        "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" -v "${verbose:-1}" -c "${comment_align:-1}" -t "${twidth:-80}" "$@" < "${input}"
     }
 
     function _ok_cmd_run {
@@ -85,7 +85,7 @@ environment variables (for internal use):
         shift
         # get the line to be executed
         local line_text
-        line_text="$(_ok_show "$line_nr")"
+        line_text="$(ok_show "$ok_file" "$line_nr")"
         local res=$?
         if [[ $res -ne 0 ]]; then
             #because stdout/stderr are swapped by ok-show.py in this case, handle this too
@@ -157,7 +157,7 @@ environment variables (for internal use):
             _ok_cmd_run "$line_nr" "$@" || return $?
         elif [[ $cmd == list ]]; then
             if [[ $once_check == 0 || ($once_check == 1 && $_OK__LAST_PWD != $(pwd)) ]]; then
-                _ok_show || return $?
+                ok_show "$ok_file" || return $?
                 local list_result=$?
                 if [[ $list_result -gt 1 ]]; then
                     return $list_result

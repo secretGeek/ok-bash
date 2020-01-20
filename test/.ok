@@ -1,6 +1,7 @@
 # Control what python to use
 _OK__PATH_TO_PYTHON=$(command -v python) # set python2
 _OK__PATH_TO_PYTHON=$(command -v python3) # set python3
+unset _OK__PATH_TO_PYTHON #test if this works too
 echo "Path to python: '$_OK__PATH_TO_PYTHON'" # check path
 $_OK__PATH_TO_PYTHON --version # check python version
 # Control encoding or not

@@ -66,16 +66,21 @@ environment variables (for internal use):
         fi
     }
 
+    function _ok_show {
+        unset -f _ok_show
+        local twidth
+        twidth="$(stty size|awk '{print $2}')"
+        cat "$ok_file" | "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$twidth" "$@"
+    }
+
     function _ok_cmd_run {
         unset -f _ok_cmd_run
         # save and remove argument. Remaining arguments are passwed to eval automatically
         local line_nr=$1 #LINE_NR is guaranteed to be 1 or more
         shift
-        local twidth
-        twidth="$(stty size|awk '{print $2}')"
         # get the line to be executed
         local line_text
-        line_text="$(cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$twidth" "$line_nr")"
+        line_text="$(_ok_show "$line_nr")"
         local res=$?
         if [[ $res -ne 0 ]]; then
             #because stdout/stderr are swapped by ok-show.py in this case, handle this too
@@ -83,13 +88,6 @@ environment variables (for internal use):
             return "$res"
         fi
         eval "$line_text"
-    }
-
-    function _ok_cmd_list {
-        unset -f _ok_cmd_list
-        local twidth
-        twidth="$(stty size|awk '{print $2}')"
-        cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$twidth" || return $?
     }
 
     local -r version="0.8.0"
@@ -154,7 +152,7 @@ environment variables (for internal use):
             _ok_cmd_run "$line_nr" "$@" || return $?
         elif [[ $cmd == list ]]; then
             if [[ $once_check == 0 || ($once_check == 1 && $_OK__LAST_PWD != $(pwd)) ]]; then
-                _ok_cmd_list
+                _ok_show || return $?
                 local list_result=$?
                 if [[ $list_result -gt 1 ]]; then
                     return $list_result

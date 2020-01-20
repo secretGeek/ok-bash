@@ -147,8 +147,9 @@ def main():
             args.terminal_width = 80
 
     if args.verbose > 1:
-        print('comment_align:', args.comment_align)
-        print('terminal_width:', args.terminal_width)
+        print(' comment_align: %d' % args.comment_align)
+        print('terminal_width: %d' % args.terminal_width)
+        print('python version: '+ sys.version.replace('\n', '\t'))
 
     # prepare (read stdin parse, transform, and calculate stuff)
     # Unicode: best to ignore other encodings? SO doesn't seem to give good advice

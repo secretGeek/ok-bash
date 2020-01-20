@@ -69,8 +69,13 @@ environment variables (for internal use):
     function _ok_show {
         unset -f _ok_show
         local twidth
+        local input="$ok_file"
+        if [[ $input = - ]]; then
+            input="/dev/stdin"
+        fi
         twidth="$(stty size|awk '{print $2}')"
-        cat "$ok_file" | "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$twidth" "$@"
+        
+        "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" -t "$twidth" "$@" < "${input}"
     }
 
     function _ok_cmd_run {

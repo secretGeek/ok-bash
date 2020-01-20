@@ -182,14 +182,14 @@ environment variables (for internal use):
             if [[ $verbose -ge 2 && $once_check == 1 && $_OK__LAST_PWD == $(pwd) ]]; then
                 echo "The listing for this folder has already been shown"
             fi
+            _OK__LAST_PWD=$(pwd)
+            export _OK__LAST_PWD
         fi
     else
         if [[ $verbose -ge 2 ]]; then
             echo "Nothing to do: this folder doesn't have a readable '$ok_file' file"
         fi
     fi
-    _OK__LAST_PWD=$(pwd)
-    export _OK__LAST_PWD
 }
 
 if [[ "$called" == "$0" ]]; then

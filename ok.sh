@@ -3,9 +3,9 @@
 called=$_
 
 #basically, get the absolute path of this script (handy for loads of things)
-pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null;
+pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null || (>&2 echo "ok-bash: pushd failed")
 _OK__PATH_TO_ME=$(pwd)
-popd > /dev/null;
+popd > /dev/null || (>&2 echo "ok-bash: popd failed")
 
 # Don't let ok-show.py's shebang control the python version; prefer python3 above python regular (2)
 _OK__PATH_TO_PYTHON=$(command -v python3 || command -v python)
@@ -45,11 +45,11 @@ script-arguments:
             if [ -z ${_OK_VERBOSE+x} ];        then local v="unset";  else local v="$_OK_VERBOSE"; fi
             if [ -z ${_OK_PROMPT_DEFAULT+x} ]; then local l="unset";  else local l="$_OK_PROMPT_DEFAULT"; fi
             echo -e "environment variables (used for colored output; current colors are shown):
-  _OK_C_HEADING      ${_OK_C_HEADING}Color-code${c_nc} for lines starting with a comment (heading). Defaults to red.
-  _OK_C_NUMBER       ${_OK_C_NUMBER}Color-code${c_nc} for numbering. Defaults to cyan.
-  _OK_C_COMMENT      ${_OK_C_COMMENT}Color-code${c_nc} for comments after commands. Defaults to blue.
-  _OK_C_COMMAND      ${_OK_C_COMMAND}Color-code${c_nc} for commands. Defaults to color-reset.
-  _OK_C_PROMPT       ${_OK_C_PROMPT}Color-code${c_nc} for prompt (both input as command confirmation). Defaults to color for numbering.
+  _OK_C_HEADING      ${_OK_C_HEADING:-}Color-code${c_nc} for lines starting with a comment (heading). Defaults to red.
+  _OK_C_NUMBER       ${_OK_C_NUMBER:-}Color-code${c_nc} for numbering. Defaults to cyan.
+  _OK_C_COMMENT      ${_OK_C_COMMENT:-}Color-code${c_nc} for comments after commands. Defaults to blue.
+  _OK_C_COMMAND      ${_OK_C_COMMAND:-}Color-code${c_nc} for commands. Defaults to color-reset.
+  _OK_C_PROMPT       ${_OK_C_PROMPT:-}Color-code${c_nc} for prompt (both input as command confirmation). Defaults to color for numbering.
 environment variables (other configuration):
   _OK_COMMENT_ALIGN  Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
   _OK_PROMPT         String ($p) used as prompt (both input as command confirmation). Defaults to '$ '.
@@ -66,6 +66,18 @@ environment variables (for internal use):
         fi
     }
 
+    function ok_show {
+        local twidth
+        local input="${1:--}"
+        shift
+        if [[ $input = - ]]; then # Prevent shellcheck's "useless cat"-warning
+            input="/dev/stdin"
+        fi
+        twidth="$(stty size|awk '{print $2}')"
+
+        "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" -v "${verbose:-1}" -c "${comment_align:-1}" -t "${twidth:-80}" "$@" < "${input}"
+    }
+
     function _ok_cmd_run {
         unset -f _ok_cmd_run
         # save and remove argument. Remaining arguments are passwed to eval automatically
@@ -73,7 +85,7 @@ environment variables (for internal use):
         shift
         # get the line to be executed
         local line_text
-        line_text="$(cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" "$line_nr")"
+        line_text="$(ok_show "$ok_file" "$line_nr")"
         local res=$?
         if [[ $res -ne 0 ]]; then
             #because stdout/stderr are swapped by ok-show.py in this case, handle this too
@@ -83,22 +95,11 @@ environment variables (for internal use):
         eval "$line_text"
     }
 
-    function _ok_cmd_list {
-        unset -f _ok_cmd_list
-
-        cat "$ok_file" | "$_OK__PATH_TO_PYTHON" "${_OK__PATH_TO_ME}/ok-show.py" -v "$verbose" -c "$comment_align" || return $?
-    }
-
-    # export variables because python is a sub-process, and variables might have changed since initialization
-    for x in $(set | grep "^_OK_" | awk -F '=' '{print $1}'); do 
-        export "$x"="${!x}"
-    done
-
     local -r version="0.8.0"
     # used for colored output (see: https://stackoverflow.com/a/20983251/56)
     # notice: this is partly a duplication from code in ok-show.py
-    local -r c_nc=$'\033[0m'
-    if [ -z ${_OK_C_NUMBER+x} ];  then local c_number=$'\033[0;36m';    else local c_number=$_OK_C_NUMBER;   fi #NUMBER defaults to CYAN
+    local -r c_nc=$'\033''[0m'
+    if [ -z ${_OK_C_NUMBER+x} ];  then local c_number=$'\033''[0;36m';  else local c_number=$_OK_C_NUMBER;   fi #NUMBER defaults to CYAN
     if [ -z ${_OK_C_PROMPT+x} ];  then local c_prompt=$c_number;        else local c_prompt=$_OK_C_PROMPT;   fi #PROMPT defaults to same color as NUMBER
     # other customizations (some environment variables can be overridden by arguments)
     if [ -z ${_OK_PROMPT+x} ];    then local prompt="$ ";               else local prompt=$_OK_PROMPT;       fi
@@ -156,7 +157,7 @@ environment variables (for internal use):
             _ok_cmd_run "$line_nr" "$@" || return $?
         elif [[ $cmd == list ]]; then
             if [[ $once_check == 0 || ($once_check == 1 && $_OK__LAST_PWD != $(pwd)) ]]; then
-                _ok_cmd_list
+                ok_show "$ok_file" || return $?
                 local list_result=$?
                 if [[ $list_result -gt 1 ]]; then
                     return $list_result
@@ -184,13 +185,14 @@ environment variables (for internal use):
             if [[ $verbose -ge 2 && $once_check == 1 && $_OK__LAST_PWD == $(pwd) ]]; then
                 echo "The listing for this folder has already been shown"
             fi
+            _OK__LAST_PWD=$(pwd)
+            export _OK__LAST_PWD
         fi
     else
         if [[ $verbose -ge 2 ]]; then
             echo "Nothing to do: this folder doesn't have a readable '$ok_file' file"
         fi
     fi
-    export _OK__LAST_PWD=$(pwd)
 }
 
 if [[ "$called" == "$0" ]]; then
@@ -235,9 +237,9 @@ else
         shift
     done
     unset re_list_once
-    # export variables so `ok` can be used from scripts as well
+    # export variables so `ok` can be used from scripts as well. Hereafter, exporting is the responsibility of the user.
     for x in $(set | grep "^_OK_" | awk -F '=' '{print $1}'); do 
-        export "$x"="${!x}"
+        export "${x?}"
     done
     #make ok available for scripts as well
     export -f ok

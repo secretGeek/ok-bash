@@ -95,7 +95,7 @@ environment variables (for internal use):
         eval "$line_text"
     }
 
-    local -r version="0.8.0"
+    local -r version="0.8.1"
     # used for colored output (see: https://stackoverflow.com/a/20983251/56)
     # notice: this is partly a duplication from code in ok-show.py
     local -r c_nc=$'\033''[0m'

@@ -95,7 +95,7 @@ environment variables (for internal use):
         eval "$line_text"
     }
 
-    local -r version="0.8.1"
+    local -r version="0.8.2dev"
     # used for colored output (see: https://stackoverflow.com/a/20983251/56)
     # notice: this is partly a duplication from code in ok-show.py
     local -r c_nc=$'\033''[0m'
@@ -220,22 +220,25 @@ arguments, if you need to customize (these can also be set via arguments/environ
 else
     # Process some installation helpers
     re_list_once=$'ok list-once'
+    # the only way to distinguish between `. /path/to/ok.bash` and `. /path/to/ok.bash some-argument`
+    if [[ ! ($# -eq 1 && $1 = "${BASH_SOURCE[0]}") ]]; then
     while (( $# > 0 )) ; do
         case $1 in
             reset)          for x in $(set | grep "^_OK_[^_]" | awk -F '=' '{print $1}'); do 
                                 unset "$x"
                             done
                             if [[ $PROMPT_COMMAND =~ $re_list_once ]]; then export PROMPT_COMMAND="${PROMPT_COMMAND/$'\n'$re_list_once/}"; fi;;
-            prompt)         if [[ $# -ge 2 ]]; then export _OK_PROMPT=$2; shift; else echo "the prompt argument needs the actual prompt as 2nd argument"; fi;;
+            prompt)         if [[ $# -ge 2 ]]; then export _OK_PROMPT=$2; shift; else >&2 echo "the prompt argument needs the actual prompt as 2nd argument"; fi;;
             prompt_default) export _OK_PROMPT_DEFAULT=1;;
-            comment_align)  if [[ $# -ge 2 ]]; then export _OK_COMMENT_ALIGN=$2; shift; else echo "the comment_align argument needs a number (0..3) as 2nd argument"; fi;;
+            comment_align)  if [[ $# -ge 2 ]]; then export _OK_COMMENT_ALIGN=$2; shift; else >&2 echo "the comment_align argument needs a number (0..3) as 2nd argument"; fi;;
             verbose)        export _OK_VERBOSE=2;;
             quiet)          export _OK_VERBOSE=0;;
             auto_show)      if [[ ! $PROMPT_COMMAND =~ $re_list_once ]]; then export PROMPT_COMMAND="${PROMPT_COMMAND}"$'\n'"${re_list_once}"; fi;;
-            *) echo "Ignoring unknown argument '$1'";;
+            *) >&2 echo "Ignoring unknown argument '$1'";;
         esac
         shift
     done
+    fi
     unset re_list_once
     # export variables so `ok` can be used from scripts as well. Hereafter, exporting is the responsibility of the user.
     for x in $(set | grep "^_OK_" | awk -F '=' '{print $1}'); do 

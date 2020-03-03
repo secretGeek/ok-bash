@@ -189,6 +189,10 @@ environment variables (for internal use):
             export _OK__LAST_PWD
         fi
     else
+        if [[ $cmd == list ]]; then
+            _OK__LAST_PWD=$(pwd)
+            export _OK__LAST_PWD
+        fi
         if [[ $verbose -ge 2 ]]; then
             echo "Nothing to do: this folder doesn't have a readable '$ok_file' file"
         fi

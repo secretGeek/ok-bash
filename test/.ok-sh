@@ -1,0 +1,14 @@
+# Control what python to use
+_OK__PATH_TO_PYTHON=$(command -v python) # set python2
+_OK__PATH_TO_PYTHON=$(command -v python3) # set python3
+unset _OK__PATH_TO_PYTHON #test if this works too
+echo "Path to python: '$_OK__PATH_TO_PYTHON'" # check path
+$_OK__PATH_TO_PYTHON --version # check python version
+# Control encoding or not
+echo "Python IO Encoding: ${PYTHONIOENCODING:--=not-set=-}"
+export PYTHONIOENCODING="UTF-8" # only python3 will choke on non-UTF-8, when this is set
+unset PYTHONIOENCODING # nonetheless, python will treat everything as ASCII
+# Go to the test cases
+cd iso_latin_1
+cd mac_os_roman
+cd utf_8

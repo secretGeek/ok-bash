@@ -106,7 +106,7 @@ environment variables (for internal use):
     if [ -z ${_OK_VERBOSE+x} ];   then local verbose=1;                 else local verbose=$_OK_VERBOSE;     fi
 
     # handle command line arguments now
-    local ok_file=".ok"
+    local ok_file=""
     local args # Make sure no double space is added
     if [[ -z "$*" ]]; then
         args="ok"
@@ -147,6 +147,15 @@ environment variables (for internal use):
         fi
         shift
     done
+    # When no ok_file supplied, check if a default one is readable
+    if [[ -z "$ok_file" ]]; then
+        for f in .ok-sh .ok; do
+            if [[ -r "$f" ]]; then
+                ok_file="$f"
+                break # found
+            fi
+        done
+    fi
 
     if [[ $cmd == usage ]]; then
         _ok_cmd_usage "$usage_error" || return $?

@@ -23,8 +23,8 @@ ok() {
        ok command [options]
 
 command (use one):
-  <number>            Run the <number>th command from the '.ok' file.
-  l, list             Show the list from the '.ok' file.$list_default
+  <number>            Run the <number>th command from the ok-file.
+  l, list             Show the list from the ok-file.$list_default
   L, list-once        Same as list, but only show when pwd is different from when the list was last shown.
   p, list-prompt      Show the list and wait for input at the ok-prompt (like --list and <number> in one command).$list_prompt_default
   h, help             Show this usage page.
@@ -32,7 +32,7 @@ options:
   -c, --comment_align N  Level of comment alignment. See \$_OK_COMMENT_ALIGN
   -v, --verbose       Show more output, mostly errors. Also it shows environment-variables in this screen.
   -q, --quiet         Only show really necessary output, so surpress echoing the command.
-  -f, --file <file>   Use a custom file instead of '.ok'; use '-' for stdin
+  -f, --file <file>   Use a custom file instead of the default '.ok-sh' and '.ok' files; use '-' for stdin
   -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
   -V, --version       Show version number and exit
   -h, --help          Show this help screen
@@ -203,7 +203,7 @@ environment variables (for internal use):
             export _OK__LAST_PWD
         fi
         if [[ $verbose -ge 2 ]]; then
-            echo "Nothing to do: this folder doesn't have a readable '$ok_file' file"
+            echo "Nothing to do: this folder doesn't have a readable ok-file"
         fi
     fi
 }

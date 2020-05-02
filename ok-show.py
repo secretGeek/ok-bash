@@ -10,10 +10,12 @@ def ansi_len(s):
 
 class ParsedLine:
     INDENT_CHAR=' '
-    def __init__(self, t, line, pos=None, line_nr=None):
+    ITEM_SUFFIX=': '
+    def __init__(self, t, line, name=None, pos=None, line_nr=None):
         self.t = t
         self.line = line
         self.pos = pos
+        self.name = name
         self.line_nr = line_nr
         self.indent = 0
 
@@ -33,6 +35,7 @@ class rx:
     heading    = re.compile('^[ \t]*(#)')
     whitespace = re.compile('^[ \t]*$')
     comment    = re.compile('(^[ \t]+)?(?<!\S)(?=#)(?!#\{)')
+    named_line = re.compile('^[ \t]*([A-Za-z_][-A-Za-z0-9_]*)[ \t]*:')
     ansi_len   = re.compile('\x1b\[.*?m')
 
 def get_env(name, default, legal_values=None):
@@ -76,9 +79,16 @@ def parse_lines(lines):
             result.append(ParsedLine('whitespace', line))
         else:
             line_nr += 1
+            match = rx.named_line.search(line)
+            if match:
+                name = match.group(1)
+                line = line[match.end():]
+                print(f'-> Found named line "{name}" at line_nr {line_nr}')
+            else:
+                name = None
             match = rx.comment.search(line)
             pos = match.start() if match else None
-            result.append(ParsedLine('code', line, line_nr=line_nr, pos=pos))
+            result.append(ParsedLine('code', line.lstrip(' \t'), name=name, line_nr=line_nr, pos=pos))
     return result
 
 def set_indent(l, start, stop, max_pos, max_width):
@@ -103,7 +113,7 @@ def format_lines(l, elastic_tab, nr_positions_line_nr, max_width):
                 max_pos = max(max_pos, 0 if x.pos is None else x.pos)
             has_no_next_item = i+1>=len(l)
             if has_no_next_item or l[i+1].t in group_reset:
-                max_command_width = max_width - nr_positions_line_nr - len('. ')
+                max_command_width = max_width - nr_positions_line_nr - len(ParsedLine.ITEM_SUFFIX)
                 # indent only at certain positions
                 set_indent(l, start_group, i+1, max_pos, max_command_width)
                 start_group = None #reset start code-block
@@ -116,7 +126,7 @@ def print_line(l, clr, nr_positions_line_nr, format_line):
         cprint(clr.nc, l.line+'\n')
     elif l.t == 'code':
         if format_line:
-            cprint(clr.number, '{:{}}. '.format(l.line_nr, nr_positions_line_nr))
+            cprint(clr.number, '{:{}}{}'.format(l.line_nr, nr_positions_line_nr, ParsedLine.ITEM_SUFFIX))
             if l.pos is None:
                 cprint(clr.command, l.line)
             else:

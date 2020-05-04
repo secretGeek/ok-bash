@@ -19,6 +19,10 @@ class ParsedLine:
         self.line_nr = line_nr
         self.indent = 0
 
+    def get_line_name_or_number(self):
+        return str(self.name if self.name else self.line_nr)
+            
+
     def set_indent(self, max_pos, max_width):
         if self.pos and max_pos:
             self.indent = max_pos - self.pos
@@ -54,6 +58,7 @@ class ok_color:
     #(https://unix.stackexchange.com/questions/9957/how-to-check-if-bash-can-print-colors)
     def __init__(self):
         self.nc      = '\033[0m'
+        self.error   = '\033[0;33m‼️  '
         self.heading = get_env('_OK_C_HEADING', '\033[0;31m')
         self.number  = get_env('_OK_C_NUMBER',  '\033[0;36m')
         self.comment = get_env('_OK_C_COMMENT', '\033[0;34m')
@@ -64,12 +69,14 @@ def cprint(color, text=''):
     if color: print(color, end='')
     if text:  print(text, end='')
 
-def parse_lines(lines):
+def parse_lines(lines, internal_commands):
     #handle Unicode BOM after being decoded: https://stackoverflow.com/a/28407897/56 and https://stackoverflow.com/a/1068700/56
     if len(lines)>0 and len(lines[0])>0 and ord(lines[0][0]) == 0xFEFF: # BOM_UTF16_BE
         lines[0] = lines[0][1:]
     result = []
     line_nr = 0
+    # keep track of unique names; initialize with ok's commands
+    named_lines = set(internal_commands.split(','))
     for line in lines:
         line = line.strip('\n')
         heading_match=rx.heading.search(line)
@@ -82,8 +89,13 @@ def parse_lines(lines):
             match = rx.named_line.search(line)
             if match:
                 name = match.group(1)
+                if name in named_lines:
+                    cprint(ok_color().error, f'Duplicate name or internal commannd "{name}", mapped to line number {line_nr}.\n')
+                    name = None
+                else:
+                    named_lines.add(name)
+                    line_nr -= 1 # "roll-back" assignment of number
                 line = line[match.end():]
-                print(f'-> Found named line "{name}" at line_nr {line_nr}')
             else:
                 name = None
             match = rx.comment.search(line)
@@ -126,7 +138,7 @@ def print_line(l, clr, nr_positions_line_nr, format_line):
         cprint(clr.nc, l.line+'\n')
     elif l.t == 'code':
         if format_line:
-            cprint(clr.number, '{:{}}{}'.format(l.line_nr, nr_positions_line_nr, ParsedLine.ITEM_SUFFIX))
+            cprint(clr.number, l.get_line_name_or_number().rjust(nr_positions_line_nr, ' ') + ParsedLine.ITEM_SUFFIX)
             if l.pos is None:
                 cprint(clr.command, l.line)
             else:
@@ -143,10 +155,13 @@ def main():
 
     # handle arguments
     parser = argparse.ArgumentParser(description='Show the ok-file colorized (or just one line).')
-    parser.add_argument('--verbose',        '-v', metavar='V', type=int, default=1, help='0=quiet, 1=normal, 2=verbose. Defaults to 1. ')
-    parser.add_argument('--comment_align',  '-c', metavar='CA', type=int, default=2, choices= [0,1,2,3], help='Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.')
+    parser.add_argument('--verbose',        '-v', metavar='V',  type=int, default=1, help='0=quiet, 1=normal, 2=verbose. Defaults to 1. ')
+    parser.add_argument('--name_align',     '-n', metavar='NA', type=int, default=2, choices= [0,1,2], help='Level of number of name alignment. 0=no alignment, 1=align numbers only (Default), 2=align numbers and names.')
+    parser.add_argument('--comment_align',  '-c', metavar='CA', type=int, default=2, choices= [0,1,2,3], help='Level of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.')
     parser.add_argument('--terminal_width', '-t', metavar='TW', type=int, default=None, help='number of columns of the terminal (tput cols)')
-    parser.add_argument('only_line_nr', metavar='N', type=int, nargs='?', help='the line number to show')
+    parser.add_argument('--internal_commands', '-I', metavar='IC', type=str, default='list,l,list-once,L,list-prompt,p,help,h', help='Internal commands of ok (that cannot be used as named lines)')
+
+    parser.add_argument('only_line_nr',           metavar='N',  type=int, nargs='?', help='the line number to show')
     args = parser.parse_args()
 
     if args.terminal_width is None:
@@ -157,6 +172,7 @@ def main():
             args.terminal_width = 80
 
     if args.verbose > 1:
+        print('  number_align: %d' % args.name_align)
         print(' comment_align: %d' % args.comment_align)
         print('terminal_width: %d' % args.terminal_width)
         print('python version: '+ sys.version.replace('\n', '\t'))
@@ -176,8 +192,14 @@ def main():
             print('* start___: %s' % err.start,    file=sys.stderr)
             print('* end_____: %s' % err.end,      file=sys.stderr)
         exit(1)
-    p_lines = parse_lines(lines)
-    cmd_lines = [pl.line_nr for pl in p_lines if pl.line_nr]
+    p_lines = parse_lines(lines, args.internal_commands)
+    # Calculate max with of numbers (optionally names)
+    if args.name_align == 1:
+        cmd_lines = [pl.line_nr for pl in p_lines if pl.line_nr]
+    elif args.name_align == 2:
+        cmd_lines = [pl.get_line_name_or_number() for pl in p_lines]
+    else:
+        cmd_lines = []
     nr_positions_line_nr = len(str(max(cmd_lines))) if len(cmd_lines)>0 else 0
     format_lines(p_lines, args.comment_align, nr_positions_line_nr, args.terminal_width)
 

@@ -1,7 +1,7 @@
 # Manipulate customizations (colors)
-reset:unset _OK_C_HEADING;unset _OK_C_NUMBER;unset _OK_C_COMMENT;unset _OK_C_COMMAND;unset _OK_C_PROMPT #Reset colors to defaults
-_OK_C_HEADING="[h]";_OK_C_NUMBER="[n]";_OK_C_COMMENT="[--]";_OK_C_COMMAND="[C]";_OK_C_PROMPT="[p]" #Change colors to text markers for debugging
-nice: _OK_C_HEADING=$'\033[1;30;45m';_OK_C_NUMBER=$'\033[1;33;44m';_OK_C_COMMENT=$'\033[1;34;46m';_OK_C_COMMAND=$'\033[1;37;44m' #Custom color scheme
+list:unset _OK_C_HEADING;unset _OK_C_NUMBER;unset _OK_C_COMMENT;unset _OK_C_COMMAND;unset _OK_C_PROMPT #Reset colors to defaults
+reset:_OK_C_HEADING="[h]";_OK_C_NUMBER="[n]";_OK_C_COMMENT="[--]";_OK_C_COMMAND="[C]";_OK_C_PROMPT="[p]" #Change colors to text markers for debugging
+reset: _OK_C_HEADING=$'\033[1;30;45m';_OK_C_NUMBER=$'\033[1;33;44m';_OK_C_COMMENT=$'\033[1;34;46m';_OK_C_COMMAND=$'\033[1;37;44m' #Custom color scheme
 # Other customizations
 unset _OK_PROMPT; unset _OK_VERBOSE; unset _OK_LIST_PROMPT # Reset to defaults
 _OK_PROMPT="-=> "; _OK_VERBOSE=2; _OK_PROMPT_DEFAULT=1; _OK_COMMENT_ALIGN=2 # Show a "nice" prompt, and give all the feedback ok can provide for, and default list'n'prompt, align comments over whitespace

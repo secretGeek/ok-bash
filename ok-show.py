@@ -40,6 +40,7 @@ class rx:
     whitespace = re.compile('^[ \t]*$')
     comment    = re.compile('(^[ \t]+)?(?<!\S)(?=#)(?!#\{)')
     named_line = re.compile('^[ \t]*([A-Za-z_][-A-Za-z0-9_]*)[ \t]*:')
+    faulty_named_line = re.compile('^[ \t]*([^:"]{1,20})[ \t]*:')
     ansi_len   = re.compile('\x1b\[.*?m')
 
 def get_env(name, default, legal_values=None):
@@ -58,7 +59,7 @@ class ok_color:
     #(https://unix.stackexchange.com/questions/9957/how-to-check-if-bash-can-print-colors)
     def __init__(self):
         self.nc      = '\033[0m'
-        self.error   = '\033[0;33m‼️  '
+        self.error   = '\033[0;33m'
         self.heading = get_env('_OK_C_HEADING', '\033[0;31m')
         self.number  = get_env('_OK_C_NUMBER',  '\033[0;36m')
         self.comment = get_env('_OK_C_COMMENT', '\033[0;34m')
@@ -68,6 +69,15 @@ class ok_color:
 def cprint(color, text=''):
     if color: print(color, end='')
     if text:  print(text, end='')
+
+def do_write_error(text):
+    x = ok_color()
+    cprint(x.nc, '‼️  ')
+    cprint(x.error, text)
+    cprint(x.nc, '\n')
+
+def dont_write_error(text):
+    pass
 
 def parse_lines(lines, internal_commands):
     #handle Unicode BOM after being decoded: https://stackoverflow.com/a/28407897/56 and https://stackoverflow.com/a/1068700/56
@@ -90,7 +100,7 @@ def parse_lines(lines, internal_commands):
             if match:
                 name = match.group(1)
                 if name in named_lines:
-                    cprint(ok_color().error, f'Duplicate name or internal commannd "{name}", mapped to line number {line_nr}.\n')
+                    write_error(f'Duplicate name (internal command) "{name}"; mapped to line number {line_nr}.')
                     name = None
                 else:
                     named_lines.add(name)
@@ -98,6 +108,10 @@ def parse_lines(lines, internal_commands):
                 line = line[match.end():]
             else:
                 name = None
+                # check for unrecognized (illegal) names
+                match = rx.faulty_named_line.search(line)
+                if match:
+                    write_error(f"Possible unrecognized named line '{match.group(1)}' detected with illegal characters (line number {line_nr})")
             match = rx.comment.search(line)
             pos = match.start() if match else None
             result.append(ParsedLine('code', line.lstrip(' \t'), name=name, line_nr=line_nr, pos=pos))
@@ -150,6 +164,8 @@ def print_line(l, clr, nr_positions_line_nr, format_line):
             print(l.line, file=sys.stderr)
 
 def main():
+    global write_error
+
     # customizations
     clr = ok_color()
 
@@ -192,6 +208,8 @@ def main():
             print('* start___: %s' % err.start,    file=sys.stderr)
             print('* end_____: %s' % err.end,      file=sys.stderr)
         exit(1)
+    execute_only = args.only_line_nr is not None
+    write_error = dont_write_error if execute_only else do_write_error
     p_lines = parse_lines(lines, args.internal_commands)
     # Calculate max with of numbers (optionally names)
     if args.name_align == 1:
@@ -204,12 +222,7 @@ def main():
     format_lines(p_lines, args.comment_align, nr_positions_line_nr, args.terminal_width)
 
     # execute
-    if args.only_line_nr is None:
-        for p_line in p_lines:
-            print_line(p_line, clr, nr_positions_line_nr, True)
-        if len(cmd_lines) == 0:
-            sys.exit(1)
-    else:
+    if execute_only:
         # swap stdout and stderr (the calling shell-script needs a unformated string, and we need to print something to the display as well)
         (sys.stdout, sys.stderr) = (sys.stderr, sys.stdout)
         try:
@@ -220,6 +233,11 @@ def main():
         # The formated line is printed to stdout, and the actual line from .ok is printed to stderr
         if args.verbose > 0: print_line(p_line, clr, nr_positions_line_nr, True)
         print_line(p_line, clr, nr_positions_line_nr, False)
+    else:
+        for p_line in p_lines:
+            print_line(p_line, clr, nr_positions_line_nr, True)
+        if len(cmd_lines) == 0:
+            sys.exit(1)
 
 
 if __name__ == "__main__":

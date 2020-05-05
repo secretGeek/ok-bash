@@ -12,3 +12,5 @@ unset PYTHONIOENCODING # nonetheless, python will treat everything as ASCII
 cd iso_latin_1
 cd mac_os_roman
 cd utf_8
+# Testing
+python3 ../ok-show.py "$@" < ok-commands 

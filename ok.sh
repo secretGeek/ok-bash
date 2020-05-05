@@ -85,8 +85,10 @@ environment variables (for internal use):
         shift
         # get the line to be executed
         local line_text
+        #echo ">>>ok_show $ok_file $line_nr"
         line_text="$(ok_show "$ok_file" "$line_nr")"
         local res=$?
+        #echo "<<<$res: $line_text"
         if [[ $res -ne 0 ]]; then
             #because stdout/stderr are swapped by ok-show.py in this case, handle this too
             >&2 echo "$line_text"
@@ -129,7 +131,7 @@ environment variables (for internal use):
             loop_args=0
         else
             case $1 in
-                #commands
+                #commands (duplicate there in ok-show.py arguments)
                 l | list)          cmd=list; show_prompt=0; once_check=0;;
                 L | list-once)     cmd=list; show_prompt=0; once_check=1;;
                 p | list-prompt)   cmd=list; show_prompt=1; once_check=0;;

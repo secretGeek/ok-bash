@@ -20,7 +20,6 @@ class ParsedLine:
         self.indent = 0
 
     def match_command(self, command):
-        #print('> {}-{}-{}-{}-'.format(self.t, self.name, self.line_nr, self.line))
         if self.t != 'code': return False
         if str(self.line_nr) == command: return True
         if self.name and self.name[:len(command)] == command: return True
@@ -48,7 +47,7 @@ class rx:
     whitespace = re.compile('^[ \t]*$')
     comment    = re.compile('(^[ \t]+)?(?<!\S)(?=#)(?!#\{)')
     named_line = re.compile('^[ \t]*([A-Za-z_][-A-Za-z0-9_]*)[ \t]*:')
-    faulty_named_line = re.compile('^[ \t]*([^:"]{1,20})[ \t]*:')
+    faulty_named_line = re.compile('^[ \t]*([^:"][^ :"]{0,19})[ \t]*:')
     ansi_len   = re.compile('\x1b\[.*?m')
 
 def get_env(name, default, legal_values=None):
@@ -79,13 +78,13 @@ def cprint(color, text=''):
     if color: print(color, end='')
     if text:  print(text, end='')
 
-def do_write_error(text):
+def do_write_warning(text):
     x = ok_color()
-    cprint(x.nc, '‼️  ')
-    cprint(x.error, text)
+    #cprint(x.nc, '‼️  ')
+    cprint(x.error, 'WARNING: '+text)
     cprint(x.nc, '\n')
 
-def dont_write_error(text):
+def dont_write_warning(text):
     pass
 
 def parse_lines(lines, internal_commands):
@@ -109,7 +108,7 @@ def parse_lines(lines, internal_commands):
             if match:
                 name = match.group(1)
                 if name in current_commands:
-                    write_error("Duplicate named command '{}'; mapped to numbered command {}.".format(name, line_nr))
+                    write_warning("Duplicate named command '{}'; mapped to numbered command {}.".format(name, line_nr))
                     name = None
                 else:
                     current_commands.add(name)
@@ -120,7 +119,7 @@ def parse_lines(lines, internal_commands):
                 # check for unrecognized (illegal) names
                 match = rx.faulty_named_line.search(line)
                 if match:
-                    write_error("Possible unrecognized named command '{}' detected with illegal characters (mapped as numbered command {})".format(match.group(1), line_nr))
+                    write_warning("Possible unrecognized named command '{}' detected with illegal characters (mapped as numbered command {})".format(match.group(1), line_nr))
             match = rx.comment.search(line)
             pos = match.start() if match else None
             result.append(ParsedLine('code', line.lstrip(' \t'), name=name, line_nr=line_nr, pos=pos))
@@ -179,9 +178,7 @@ def print_line(l, clr, nr_positions_line_nr, format_line):
             indent_size = nr_positions_line_nr-len(x)
             if l.name:
                 x, y = x[:l.min_name_len], x[l.min_name_len:] #
-                #print('--{}-:-{}--{}--{}--'.format(l.name, x, y, l.min_name_len))
             cprint(clr.number, indent_size*' ' + x)
-            #cprint(clr.number, x)
             cprint(clr.number2, y+ParsedLine.ITEM_SUFFIX)
             if l.pos is None:
                 cprint(clr.command, l.line)
@@ -194,7 +191,7 @@ def print_line(l, clr, nr_positions_line_nr, format_line):
             print(l.line, file=sys.stderr)
 
 def main():
-    global write_error
+    global write_warning
 
     # customizations
     clr = ok_color()
@@ -217,8 +214,9 @@ def main():
         else:
             # Python 2 doesn't have `get_terminal_size`
             args.terminal_width = 80
+    execute_only = args.command is not None
 
-    if args.verbose > 1:
+    if args.verbose > 1 and not execute_only:
         print('  number_align: %d' % args.name_align)
         print(' heading_align: %d' % args.heading_align)
         print(' comment_align: %d' % args.comment_align)
@@ -240,8 +238,8 @@ def main():
             print('* start___: %s' % err.start,    file=sys.stderr)
             print('* end_____: %s' % err.end,      file=sys.stderr)
         exit(1)
-    execute_only = args.command is not None
-    write_error = dont_write_error if execute_only else do_write_error
+    # Only write warnings when showing lists
+    write_warning = dont_write_warning if execute_only else do_write_warning
     p_lines = parse_lines(lines, set(args.internal_commands.split(',')))
     # Calculate max with of numbers (optionally names)
     if args.name_align == 1:
@@ -259,17 +257,20 @@ def main():
         (sys.stdout, sys.stderr) = (sys.stderr, sys.stdout)
         p_lines = [x for x in p_lines if x.match_command(args.command)]
         if len(p_lines) == 0:
-            print("entered command '{}' could not be found in ok-file".format(args.command))
+            print("ERROR: entered command '{}' could not be found in ok-file".format(args.command))
             # TODO: Use Levenshtein Distance to determine a suggestion to use
             # See <https://stackabuse.com/levenshtein-distance-and-text-similarity-in-python/>
             sys.exit(2)
         elif len(p_lines) > 1:
-            print("command '{}' is ambiguous, which did you mean:".format(args.command))
+            print("ERROR: command '{}' is ambiguous, which did you mean:".format(args.command))
             names = [p_line.name for p_line in p_lines]
             alternatives = ', '.join(names[:-1]) + ' or ' + names[-1]
             print('\t{}'.format(alternatives))
             sys.exit(3)
         p_line = p_lines[0]
+        current_command = p_line.get_line_name_or_number()
+        if args.verbose > 1 and args.command != current_command:
+            print("INFO: matched argument '{}' with command '{}' because it was the only match".format(args.command, current_command))
         # The formated line is printed to stdout, and the actual line from .ok is printed to stderr
         if args.verbose > 0: print_line(p_line, clr, nr_positions_line_nr, True)
         print_line(p_line, clr, nr_positions_line_nr, False)

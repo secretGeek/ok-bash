@@ -16,12 +16,20 @@ class ParsedLine:
         self.line = line
         self.pos = pos
         self.name = name
-        self.line_nr = line_nr
+        self.line_nr = line_nr if name is None else 0
         self.indent = 0
 
+    def match_command(self, command):
+        #print('> {}-{}-{}-{}-'.format(self.t, self.name, self.line_nr, self.line))
+        if self.t != 'code': return False
+        if str(self.line_nr) == command: return True
+        if self.name and self.name[:len(command)] == command: return True
+        return False
+
     def get_line_name_or_number(self):
-        return str(self.name if self.name else self.line_nr)
-            
+        if self.name    is not None: return self.name
+        if self.line_nr is not None: return str(self.line_nr)
+        return ''
 
     def set_indent(self, max_pos, max_width):
         if self.pos and max_pos:
@@ -61,10 +69,11 @@ class ok_color:
         self.nc      = '\033[0m'
         self.error   = '\033[0;33m'
         self.heading = get_env('_OK_C_HEADING', '\033[0;31m')
-        self.number  = get_env('_OK_C_NUMBER',  '\033[0;36m')
+        self.number  = get_env('_OK_C_NUMBER',  '\033[1;36m')
+        self.number2 = get_env('_OK_C_NUMBER',  '\033[0;36m') # nog niet configureerbaar..
         self.comment = get_env('_OK_C_COMMENT', '\033[0;34m')
         self.command = get_env('_OK_C_COMMAND', self.nc)
-        self.prompt  = get_env('_OK_C_PROMPT',  self.number)
+        self.prompt  = get_env('_OK_C_PROMPT',  self.number2)
 
 def cprint(color, text=''):
     if color: print(color, end='')
@@ -86,7 +95,7 @@ def parse_lines(lines, internal_commands):
     result = []
     line_nr = 0
     # keep track of unique names; initialize with ok's commands
-    named_lines = set(internal_commands.split(','))
+    current_commands = set(internal_commands)
     for line in lines:
         line = line.strip('\n')
         heading_match=rx.heading.search(line)
@@ -99,11 +108,11 @@ def parse_lines(lines, internal_commands):
             match = rx.named_line.search(line)
             if match:
                 name = match.group(1)
-                if name in named_lines:
-                    write_error(f'Duplicate name (internal command) "{name}"; mapped to line number {line_nr}.')
+                if name in current_commands:
+                    write_error("Duplicate named command '{}'; mapped to numbered command {}.".format(name, line_nr))
                     name = None
                 else:
-                    named_lines.add(name)
+                    current_commands.add(name)
                     line_nr -= 1 # "roll-back" assignment of number
                 line = line[match.end():]
             else:
@@ -111,10 +120,19 @@ def parse_lines(lines, internal_commands):
                 # check for unrecognized (illegal) names
                 match = rx.faulty_named_line.search(line)
                 if match:
-                    write_error(f"Possible unrecognized named line '{match.group(1)}' detected with illegal characters (line number {line_nr})")
+                    write_error("Possible unrecognized named command '{}' detected with illegal characters (mapped as numbered command {})".format(match.group(1), line_nr))
             match = rx.comment.search(line)
             pos = match.start() if match else None
             result.append(ParsedLine('code', line.lstrip(' \t'), name=name, line_nr=line_nr, pos=pos))
+    # Determine shortest possible name for all named items
+    for p in [p_line for p_line in result if p_line.name]:
+        shortest = ''
+        for ch in p.name:
+            shortest += ch
+            alternatives = [n for n in current_commands if n[:len(shortest)]==shortest]
+            if len(alternatives)==1: 
+                break
+        p.min_name_len = len(shortest)
     return result
 
 def set_indent(l, start, stop, max_pos, max_width):
@@ -123,7 +141,7 @@ def set_indent(l, start, stop, max_pos, max_width):
         if item.t == 'code':
             item.set_indent(max_pos, max_width)
 
-def format_lines(l, elastic_tab, nr_positions_line_nr, max_width):
+def format_lines(l, heading_align, elastic_tab, nr_positions_line_nr, max_width):
     if elastic_tab == 0: return
     if elastic_tab == 1: group_reset = ['heading','whitespace']
     if elastic_tab == 2: group_reset = ['heading']
@@ -143,16 +161,28 @@ def format_lines(l, elastic_tab, nr_positions_line_nr, max_width):
                 # indent only at certain positions
                 set_indent(l, start_group, i+1, max_pos, max_command_width)
                 start_group = None #reset start code-block
+        # Heading ident
+        if x.t == 'heading':
+            if heading_align >= 1: x.indent += nr_positions_line_nr
+            if heading_align >= 2: x.indent += len(ParsedLine.ITEM_SUFFIX)
 
 def print_line(l, clr, nr_positions_line_nr, format_line):
     if l.t == 'heading':
-        cprint(clr.heading, l.line)
+        cprint(clr.heading, ParsedLine.INDENT_CHAR*l.indent)
+        cprint(None, l.line)
         cprint(clr.nc, '\n')
     elif l.t == 'whitespace':
         cprint(clr.nc, l.line+'\n')
     elif l.t == 'code':
         if format_line:
-            cprint(clr.number, l.get_line_name_or_number().rjust(nr_positions_line_nr, ' ') + ParsedLine.ITEM_SUFFIX)
+            x, y = l.get_line_name_or_number(), ''
+            indent_size = nr_positions_line_nr-len(x)
+            if l.name:
+                x, y = x[:l.min_name_len], x[l.min_name_len:] #
+                #print('--{}-:-{}--{}--{}--'.format(l.name, x, y, l.min_name_len))
+            cprint(clr.number, indent_size*' ' + x)
+            #cprint(clr.number, x)
+            cprint(clr.number2, y+ParsedLine.ITEM_SUFFIX)
             if l.pos is None:
                 cprint(clr.command, l.line)
             else:
@@ -171,13 +201,14 @@ def main():
 
     # handle arguments
     parser = argparse.ArgumentParser(description='Show the ok-file colorized (or just one line).')
-    parser.add_argument('--verbose',        '-v', metavar='V',  type=int, default=1, help='0=quiet, 1=normal, 2=verbose. Defaults to 1. ')
-    parser.add_argument('--name_align',     '-n', metavar='NA', type=int, default=2, choices= [0,1,2], help='Level of number of name alignment. 0=no alignment, 1=align numbers only (Default), 2=align numbers and names.')
-    parser.add_argument('--comment_align',  '-c', metavar='CA', type=int, default=2, choices= [0,1,2,3], help='Level of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.')
-    parser.add_argument('--terminal_width', '-t', metavar='TW', type=int, default=None, help='number of columns of the terminal (tput cols)')
-    parser.add_argument('--internal_commands', '-I', metavar='IC', type=str, default='list,l,list-once,L,list-prompt,p,help,h', help='Internal commands of ok (that cannot be used as named lines)')
+    parser.add_argument('--verbose',           '-v', metavar='V',   type=int, default=1, help='0=quiet, 1=normal, 2=verbose. Defaults to 1. ')
+    parser.add_argument('--name_align',        '-n', metavar='NA',  type=int, default=2, choices= [0,1,2], help='Level of number of name alignment. 0=no alignment, 1=align numbers only (Default), 2=align numbers and names.')
+    parser.add_argument('--heading_align',     '-H', metavar='HA',  type=int, default=1, choices= [0,1,2], help='Level of heading alignment. 0=no alignment, 1=left align with command colons, 2=left align with code (depends on --name_align).')
+    parser.add_argument('--comment_align',     '-c', metavar='CA',  type=int, default=2, choices= [0,1,2,3], help='Level of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.')
+    parser.add_argument('--terminal_width',    '-t', metavar='TW',  type=int, default=None, help='number of columns of the terminal (tput cols)')
+    parser.add_argument('--internal_commands', '-I', metavar='IC',  type=str, default='list,l,list-once,L,list-prompt,p,help,h', help='Internal commands of ok (that cannot be used as named lines)')
 
-    parser.add_argument('only_line_nr',           metavar='N',  type=int, nargs='?', help='the line number to show')
+    parser.add_argument('command',                   metavar='CMD', type=str, nargs='?', help='The command name or line number to show')
     args = parser.parse_args()
 
     if args.terminal_width is None:
@@ -189,6 +220,7 @@ def main():
 
     if args.verbose > 1:
         print('  number_align: %d' % args.name_align)
+        print(' heading_align: %d' % args.heading_align)
         print(' comment_align: %d' % args.comment_align)
         print('terminal_width: %d' % args.terminal_width)
         print('python version: '+ sys.version.replace('\n', '\t'))
@@ -208,28 +240,36 @@ def main():
             print('* start___: %s' % err.start,    file=sys.stderr)
             print('* end_____: %s' % err.end,      file=sys.stderr)
         exit(1)
-    execute_only = args.only_line_nr is not None
+    execute_only = args.command is not None
     write_error = dont_write_error if execute_only else do_write_error
-    p_lines = parse_lines(lines, args.internal_commands)
+    p_lines = parse_lines(lines, set(args.internal_commands.split(',')))
     # Calculate max with of numbers (optionally names)
     if args.name_align == 1:
-        cmd_lines = [pl.line_nr for pl in p_lines if pl.line_nr]
+        cmd_lines = [len(str(pl.line_nr)) for pl in p_lines if pl.line_nr]
     elif args.name_align == 2:
-        cmd_lines = [pl.get_line_name_or_number() for pl in p_lines]
+        cmd_lines = [len(pl.get_line_name_or_number()) for pl in p_lines]
     else:
         cmd_lines = []
-    nr_positions_line_nr = len(str(max(cmd_lines))) if len(cmd_lines)>0 else 0
-    format_lines(p_lines, args.comment_align, nr_positions_line_nr, args.terminal_width)
+    nr_positions_line_nr = max(cmd_lines) if len(cmd_lines)>0 else 0
+    format_lines(p_lines, args.heading_align, args.comment_align, nr_positions_line_nr, args.terminal_width)
 
     # execute
     if execute_only:
         # swap stdout and stderr (the calling shell-script needs a unformated string, and we need to print something to the display as well)
         (sys.stdout, sys.stderr) = (sys.stderr, sys.stdout)
-        try:
-            p_line = next(x for x in p_lines if x.t=='code' and x.line_nr==args.only_line_nr)
-        except StopIteration:
-            if args.verbose >= 2: print("ERROR: entered line number '{}' does not exist".format(args.only_line_nr))
+        p_lines = [x for x in p_lines if x.match_command(args.command)]
+        if len(p_lines) == 0:
+            print("entered command '{}' could not be found in ok-file".format(args.command))
+            # TODO: Use Levenshtein Distance to determine a suggestion to use
+            # See <https://stackabuse.com/levenshtein-distance-and-text-similarity-in-python/>
             sys.exit(2)
+        elif len(p_lines) > 1:
+            print("command '{}' is ambiguous, which did you mean:".format(args.command))
+            names = [p_line.name for p_line in p_lines]
+            alternatives = ', '.join(names[:-1]) + ' or ' + names[-1]
+            print('\t{}'.format(alternatives))
+            sys.exit(3)
+        p_line = p_lines[0]
         # The formated line is printed to stdout, and the actual line from .ok is printed to stderr
         if args.verbose > 0: print_line(p_line, clr, nr_positions_line_nr, True)
         print_line(p_line, clr, nr_positions_line_nr, False)

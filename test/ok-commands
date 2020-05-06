@@ -1,7 +1,0 @@
-echo "Numbered line (1)"
-named: echo "Named line"
-named: echo "Numbered line (2), because of duplicate command name"
-list: echo "Numbered line (3), because of using internal command"
-1: echo "Numbered line (4), illegal command name"
-tëst: echo "Numbered line (5), also illegal command name"
-echo "Test: numbered line (6), colon within string"

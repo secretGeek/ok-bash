@@ -19,11 +19,12 @@ ok() {
         else
             local list_default=" Default command." list_prompt_default=""
         fi
-        echo -e "Usage: ok [options] <number> [script-arguments..]
-       ok command [options]
+        echo -e "Usage: ok [options] <named or numbered command> [script-arguments..]
+       ok <internal command> [options]
 
 command (use one):
-  <number>            Run the <number>th command from the ok-file.
+  <number>            Run an unnamed command (the <number>th unnamed command) from the ok-file.
+  <name>              Run an named command from the ok-file (starts with a letter or underscore, followed by same or dash or numbers)
   l, list             Show the list from the ok-file.$list_default
   L, list-once        Same as list, but only show when pwd is different from when the list was last shown.
   p, list-prompt      Show the list and wait for input at the ok-prompt (like --list and <number> in one command).$list_prompt_default
@@ -74,6 +75,10 @@ environment variables (for internal use):
             input="/dev/stdin"
         fi
         twidth="$(stty size|awk '{print $2}')"
+        # Make sure colors are exported, so python can use them
+        for x in $(set | grep "^_OK_C_" | awk -F '=' '{print $1}'); do 
+            export "${x?}"
+        done
 
         "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" -v "${verbose:-1}" -c "${comment_align:-1}" -t "${twidth:-80}" "$@" < "${input}"
     }
@@ -81,12 +86,12 @@ environment variables (for internal use):
     function _ok_cmd_run {
         unset -f _ok_cmd_run
         # save and remove argument. Remaining arguments are passwed to eval automatically
-        local line_nr=$1 #LINE_NR is guaranteed to be 1 or more
+        local external_command=$1 #LINE_NR is guaranteed to be 1 or more
         shift
         # get the line to be executed
         local line_text
-        #echo ">>>ok_show $ok_file $line_nr"
-        line_text="$(ok_show "$ok_file" "$line_nr")"
+        #echo ">>>ok_show $ok_file $external_command"
+        line_text="$(ok_show "$ok_file" "$external_command")"
         local res=$?
         #echo "<<<$res: $line_text"
         if [[ $res -ne 0 ]]; then
@@ -115,38 +120,37 @@ environment variables (for internal use):
     else
         args="ok $*"
     fi
-    local re_is_num='^[1-9][0-9]*$' #numbers starting with "0" would be octal, and nobody knows those (also: sed on Linux complains about line "0")...
+    local re_is_cmd='^[1-9][0-9]*|[A-Za-z_][-A-Za-z0-9_]*$' #numbers starting with "0" would be octal, and nobody knows those (also: sed on Linux complains about line "0")...
     local cmd=list
-    local line_nr=0
+    local external_command=0
     local once_check=0
     local show_prompt=${_OK_PROMPT_DEFAULT:-0}
     local comment_align=${_OK_COMMENT_ALIGN:-1}
     local usage_error=
-    local loop_args=1 #the Pascal-way to break loops
-    while (( $# > 0 && loop_args == 1 )) ; do
-        # if the user provided a parameter, $1, which contains a number...
-        if [[ $1 =~ $re_is_num ]]; then
-            cmd=run
-            line_nr=$1
-            loop_args=0
-        else
-            case $1 in
-                #commands (duplicate there in ok-show.py arguments)
-                l | list)          cmd=list; show_prompt=0; once_check=0;;
-                L | list-once)     cmd=list; show_prompt=0; once_check=1;;
-                p | list-prompt)   cmd=list; show_prompt=1; once_check=0;;
-                h | help)          cmd=usage;;
-                #options
-                -V | --version)    cmd=version;;
-                -\? | -h | --help) cmd=usage;;
-                -v | --verbose)    verbose=2;;
-                -q | --quiet)      verbose=0;;
-                -c | --comment_align) if [[ $# -ge 2 ]]; then comment_align=$2; shift; else echo "the $1 argument needs a number (0..3) as 2nd argument"; fi;;
-                -f | --file)       if [[ $# -gt 1 && -r "$2" || "-" == "$2" ]]; then ok_file="$2"; shift; else _ok_cmd_usage "No file provided, or file is not readable ($2)" || return $?; fi;;
-                -a | --alias)      if [[ $# -gt 1 && -n "$2" ]]; then args="$2"; shift; else _ok_cmd_usage "Empty or no alias provided" || return $?; fi;;
-                *)                 cmd=usage; usage_error="Unknown command/option '$1'";;
-            esac
-        fi
+    while (( $# > 0 )) ; do
+        case $1 in
+            #commands (duplicate there in ok-show.py arguments)
+            l | list)          cmd=list; show_prompt=0; once_check=0;;
+            L | list-once)     cmd=list; show_prompt=0; once_check=1;;
+            p | list-prompt)   cmd=list; show_prompt=1; once_check=0;;
+            h | help)          cmd=usage;;
+            #options
+            -V | --version)    cmd=version;;
+            -\? | -h | --help) cmd=usage;;
+            -v | --verbose)    verbose=2;;
+            -q | --quiet)      verbose=0;;
+            -c | --comment_align) if [[ $# -ge 2 ]]; then comment_align=$2; shift; else echo "the $1 argument needs a number (0..3) as 2nd argument"; fi;;
+            -f | --file)        if [[ $# -gt 1 && -r "$2" || "-" == "$2" ]]; then ok_file="$2"; shift; else _ok_cmd_usage "No file provided, or file is not readable ($2)" || return $?; fi;;
+            -a | --alias)       if [[ $# -gt 1 && -n "$2" ]]; then args="$2"; shift; else _ok_cmd_usage "Empty or no alias provided" || return $?; fi;;
+            -*)                 cmd=usage; usage_error="Illegal option '$1'";;
+            *)                  if [[ $1 =~ $re_is_cmd ]]; then
+                                    cmd=run
+                                    external_command="$1"
+                                    break
+                                else
+                                    cmd=usage; usage_error="Illegal command '$1'"
+                                fi;;
+        esac
         shift
     done
     # When no ok_file supplied, check if a default one is readable
@@ -165,7 +169,7 @@ environment variables (for internal use):
         echo "ok-bash $version"
     elif [[ - == "$ok_file" || -r "$ok_file" ]]; then
         if [[ $cmd == run ]]; then
-            _ok_cmd_run "$line_nr" "$@" || return $?
+            _ok_cmd_run "$external_command" "$@" || return $?
         elif [[ $cmd == list ]]; then
             if [[ $once_check == 0 || ($once_check == 1 && $_OK__LAST_PWD != $(pwd)) ]]; then
                 ok_show "$ok_file" || return $?
@@ -260,6 +264,6 @@ else
         export "${x?}"
     done
     #make ok available for scripts as well
-    export -f ok
+    #export -f ok
 fi
 unset called

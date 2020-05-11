@@ -46,7 +46,7 @@ class rx:
     heading    = re.compile('^[ \t]*(#)')
     whitespace = re.compile('^[ \t]*$')
     comment    = re.compile('(^[ \t]+)?(?<!\S)(?=#)(?!#\{)')
-    named_line = re.compile('^[ \t]*([A-Za-z_][-A-Za-z0-9_]*)[ \t]*:')
+    named_line = re.compile('^[ \t]*([A-Za-z_][-A-Za-z0-9_.]*)[ \t]*:')
     faulty_named_line = re.compile('^[ \t]*([^:"][^ :"]{0,19})[ \t]*:')
     ansi_len   = re.compile('\x1b\[.*?m')
 

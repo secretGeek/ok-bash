@@ -120,7 +120,7 @@ environment variables (for internal use):
     else
         args="ok $*"
     fi
-    local re_is_cmd='^[1-9][0-9]*|[A-Za-z_][-A-Za-z0-9_]*$' #numbers starting with "0" would be octal, and nobody knows those (also: sed on Linux complains about line "0")...
+    local re_is_cmd='^[1-9][0-9]*|[A-Za-z_][-A-Za-z0-9_.]*$' # IMPORTANT: duplicate regex; "definition" in file `ok-show.py`
     local cmd=list
     local external_command=0
     local once_check=0

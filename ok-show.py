@@ -4,6 +4,35 @@
 from __future__ import print_function
 import argparse, codecs, os, re, shutil, sys
 
+# Via: <https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python>
+# Christopher P. Matthews
+# christophermatthews1985@gmail.com
+# Sacramento, CA, USA
+def levenshtein(s, t):
+    ''' From Wikipedia article; Iterative with two matrix rows. '''
+    if s == t: return 0
+    elif len(s) == 0: return len(t)
+    elif len(t) == 0: return len(s)
+    v0 = [None] * (len(t) + 1)
+    v1 = [None] * (len(t) + 1)
+    for i in range(len(v0)):
+        v0[i] = i
+    for i in range(len(s)):
+        v1[0] = i + 1
+        for j in range(len(t)):
+            cost = 0 if s[i] == t[j] else 1
+            v1[j + 1] = min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost)
+        for j in range(len(v0)):
+            v0[j] = v1[j]
+
+    return v1[len(t)]
+
+def find_similar_items(command, all_commands):
+    alternatives = [a.lower() for a in all_commands]
+    scores = [levenshtein(command.lower(), a) for a in alternatives]
+    best_score = min(scores)
+    return [alternatives[i] for i in range(len(scores)) if scores[i]==best_score]
+
 def ansi_len(s):
     no_ansi_s = rx.ansi_len.sub('', s)
     return len(no_ansi_s)
@@ -131,7 +160,7 @@ def parse_lines(lines, internal_commands):
             if len(alternatives)==1: 
                 break
         p.min_name_len = len(shortest)
-    return result
+    return result, current_commands
 
 def set_indent(l, start, stop, max_pos, max_width):
     for i in range(start, stop):
@@ -239,7 +268,7 @@ def main():
         exit(1)
     # Only write warnings when showing lists
     write_warning = dont_write_warning if execute_only else do_write_warning
-    p_lines = parse_lines(lines, set(args.internal_commands.split(',')))
+    p_lines, all_commands = parse_lines(lines, set(args.internal_commands.split(',')))
     # Calculate max with of numbers (optionally names)
     if args.name_align == 1:
         cmd_lines = [len(str(pl.line_nr)) for pl in p_lines if pl.line_nr]
@@ -256,12 +285,16 @@ def main():
         (sys.stdout, sys.stderr) = (sys.stderr, sys.stdout)
         p_lines = [x for x in p_lines if x.match_command(args.command)]
         if len(p_lines) == 0:
-            print("ERROR: entered command '{}' could not be found in ok-file".format(args.command))
-            # TODO: Use Levenshtein Distance to determine a suggestion to use
-            # See <https://stackabuse.com/levenshtein-distance-and-text-similarity-in-python/>
+            similar_items = find_similar_items(args.command, all_commands)
+            print("ERROR: entered command '{}' could not be found in ok-file, suggested {}:".format(args.command, 'items' if len(similar_items)>1 else 'item'))
+            if len(similar_items)>1:
+                suggestions = ', '.join(similar_items[:-1]) + ' or ' + similar_items[-1]
+            else:
+                suggestions = similar_items[0] #there is always at least one suggestion
+            print('\t{}'.format(suggestions))
             sys.exit(2)
         elif len(p_lines) > 1:
-            print("ERROR: command '{}' is ambiguous, which did you mean:".format(args.command))
+            print("ERROR: command '{}' is ambiguous, which command did you mean:".format(args.command))
             names = [p_line.name for p_line in p_lines]
             alternatives = ', '.join(names[:-1]) + ' or ' + names[-1]
             print('\t{}'.format(alternatives))

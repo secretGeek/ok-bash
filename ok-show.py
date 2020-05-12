@@ -16,7 +16,7 @@ class ParsedLine:
         self.line = line
         self.pos = pos
         self.name = name
-        self.line_nr = line_nr if name is None else 0
+        self.line_nr = line_nr
         self.indent = 0
 
     def match_command(self, command):
@@ -112,7 +112,6 @@ def parse_lines(lines, internal_commands):
                     name = None
                 else:
                     current_commands.add(name)
-                    line_nr -= 1 # "roll-back" assignment of number
                 line = line[match.end():]
             else:
                 name = None

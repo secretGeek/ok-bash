@@ -28,7 +28,7 @@ def levenshtein(s, t):
     return v1[len(t)]
 
 def find_similar_items(command, all_commands):
-    alternatives = [a.lower() for a in all_commands]
+    alternatives = [a.lower() for a in all_commands if len(a)>1]
     scores = [levenshtein(command.lower(), a) for a in alternatives]
     best_score = min(scores)
     return [alternatives[i] for i in range(len(scores)) if scores[i]==best_score]
@@ -137,7 +137,7 @@ def parse_lines(lines, internal_commands):
             if match:
                 name = match.group(1)
                 if name in current_commands:
-                    write_warning("Duplicate named command '{}'; mapped to numbered command {}.".format(name, line_nr))
+                    write_warning("Duplicate named command '{}'; mapped to {}.".format(name, line_nr))
                     name = None
                 else:
                     current_commands.add(name)
@@ -147,7 +147,7 @@ def parse_lines(lines, internal_commands):
                 # check for unrecognized (illegal) names
                 match = rx.faulty_named_line.search(line)
                 if match:
-                    write_warning("Possible unrecognized named command '{}' detected with illegal characters (mapped as numbered command {})".format(match.group(1), line_nr))
+                    write_warning("Possible unrecognized named command '{}' detected with illegal characters (mapped to {})".format(match.group(1), line_nr))
             match = rx.comment.search(line)
             pos = match.start() if match else None
             result.append(ParsedLine('code', line.lstrip(' \t'), name=name, line_nr=line_nr, pos=pos))
@@ -286,7 +286,7 @@ def main():
         p_lines = [x for x in p_lines if x.match_command(args.command)]
         if len(p_lines) == 0:
             similar_items = find_similar_items(args.command, all_commands)
-            print("ERROR: entered command '{}' could not be found in ok-file, suggested {}:".format(args.command, 'items' if len(similar_items)>1 else 'item'))
+            print("Entered command '{}' could not be found, suggested {}:".format(args.command, 'items' if len(similar_items)>1 else 'item'))
             if len(similar_items)>1:
                 suggestions = ', '.join(similar_items[:-1]) + ' or ' + similar_items[-1]
             else:
@@ -294,7 +294,7 @@ def main():
             print('\t{}'.format(suggestions))
             sys.exit(2)
         elif len(p_lines) > 1:
-            print("ERROR: command '{}' is ambiguous, which command did you mean:".format(args.command))
+            print("Command '{}' is ambiguous, which command did you mean:".format(args.command))
             names = [p_line.name for p_line in p_lines]
             alternatives = ', '.join(names[:-1]) + ' or ' + names[-1]
             print('\t{}'.format(alternatives))
@@ -302,7 +302,7 @@ def main():
         p_line = p_lines[0]
         current_command = p_line.get_line_name_or_number()
         if args.verbose > 1 and args.command != current_command:
-            print("INFO: matched argument '{}' with command '{}' because it was the only match".format(args.command, current_command))
+            print("Matched argument '{}' with command '{}' because it was the only match".format(args.command, current_command))
         # The formated line is printed to stdout, and the actual line from .ok is printed to stderr
         if args.verbose > 0: print_line(p_line, clr, nr_positions_line_nr, True)
         print_line(p_line, clr, nr_positions_line_nr, False)

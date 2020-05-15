@@ -127,7 +127,8 @@ environment variables (for internal use):
     local show_prompt=${_OK_PROMPT_DEFAULT:-0}
     local comment_align=${_OK_COMMENT_ALIGN:-1}
     local usage_error=
-    while (( $# > 0 )) ; do
+    local loop_args=1 #the Pascal-way to break loops
+    while (( $# > 0 && loop_args == 1 )) ; do
         case $1 in
             #commands (duplicate there in ok-show.py arguments)
             l | list)          cmd=list; show_prompt=0; once_check=0;;
@@ -146,7 +147,7 @@ environment variables (for internal use):
             *)                  if [[ $1 =~ $re_is_cmd ]]; then
                                     cmd=run
                                     external_command="$1"
-                                    break
+                                    loop_args=0
                                 else
                                     cmd=usage; usage_error="Illegal command '$1'"
                                 fi;;

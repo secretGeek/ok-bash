@@ -148,9 +148,10 @@ def parse_lines(lines, internal_commands):
                 match = rx.faulty_named_line.search(line)
                 if match:
                     write_warning("Possible unrecognized named command '{}' detected with illegal characters (mapped to {})".format(match.group(1), line_nr))
+            line = line.lstrip(' \t')
             match = rx.comment.search(line)
             pos = match.start() if match else None
-            result.append(ParsedLine('code', line.lstrip(' \t'), name=name, line_nr=line_nr, pos=pos))
+            result.append(ParsedLine('code', line, name=name, line_nr=line_nr, pos=pos))
     # Determine shortest possible name for all named items
     for p in [p_line for p_line in result if p_line.name]:
         shortest = ''

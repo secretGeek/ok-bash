@@ -28,7 +28,7 @@ def levenshtein(s, t):
     return v1[len(t)]
 
 def find_similar_items(command, all_commands):
-    alternatives = [a.lower() for a in all_commands if len(a)>1]
+    alternatives = [a.lower() for a in all_commands]
     scores = [levenshtein(command.lower(), a) for a in alternatives]
     best_score = min(scores)
     return [alternatives[i] for i in range(len(scores)) if scores[i]==best_score]
@@ -202,7 +202,7 @@ def format_lines(l, heading_align, elastic_tab, nr_positions_line_nr, max_width)
             if heading_align >= 1: x.indent += nr_positions_line_nr
             if heading_align >= 2: x.indent += len(ParsedLine.ITEM_SUFFIX)
 
-def print_line(l, clr, nr_positions_line_nr, format_line, verbose):
+def print_line(l, clr, nr_positions_line_nr, format_line, hide_internal_commands):
     if l.t == 'heading':
         cprint(clr.heading, ParsedLine.INDENT_CHAR*l.indent)
         cprint(None, l.line)
@@ -210,8 +210,8 @@ def print_line(l, clr, nr_positions_line_nr, format_line, verbose):
     elif l.t == 'whitespace':
         cprint(clr.nc, l.line+'\n')
     elif l.t == 'code':
-        if l.line_nr < 0 and verbose < 2:
-            return # don't print internal commands
+        if l.line_nr < 0 and hide_internal_commands:
+            return
         if format_line:
             x, y = l.get_line_name_or_number(), ''
             indent_size = nr_positions_line_nr-len(x)
@@ -319,11 +319,11 @@ def main():
         if args.verbose > 1 and args.command != current_command:
             print("Matched argument '{}' with command '{}' because it was the only match".format(args.command, current_command))
         # The formated line is printed to stdout, and the actual line from .ok is printed to stderr
-        if args.verbose > 0: print_line(p_line, clr, nr_positions_line_nr, True, args.verbose)
-        print_line(p_line, clr, nr_positions_line_nr, False, args.verbose)
+        if args.verbose > 0: print_line(p_line, clr, nr_positions_line_nr, True, args.verbose < 2)
+        print_line(p_line, clr, nr_positions_line_nr, False, False) #always print here
     else:
         for p_line in p_lines:
-            print_line(p_line, clr, nr_positions_line_nr, True, args.verbose)
+            print_line(p_line, clr, nr_positions_line_nr, True, args.verbose < 2)
         if len(cmd_lines) == 0:
             sys.exit(1)
 

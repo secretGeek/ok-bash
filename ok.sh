@@ -25,10 +25,10 @@ ok() {
 command (use one):
   <number>            Run an unnamed command (the <number>th unnamed command) from the ok-file.
   <name>              Run an named command from the ok-file (starts with a letter or underscore, followed by same or dash or numbers)
-  l, list             Show the list from the ok-file.$list_default
-  L, list-once        Same as list, but only show when pwd is different from when the list was last shown.
-  p, list-prompt      Show the list and wait for input at the ok-prompt (like --list and <number> in one command).$list_prompt_default
-  h, help             Show this usage page.
+  list                Show the list from the ok-file.$list_default
+  list-once           Same as list, but only show when pwd is different from when the list was last shown.
+  list-prompt         Show the list and wait for input at the ok-prompt (like --list and <number> in one command).$list_prompt_default
+  help                Show this usage page.
 options:
   -c, --comment_align N  Level of comment alignment. See \$_OK_COMMENT_ALIGN
   -v, --verbose       Show more output, mostly errors. Also it shows environment-variables in this screen.
@@ -120,7 +120,8 @@ environment variables (for internal use):
     else
         args="ok $*"
     fi
-    local re_is_cmd='^[1-9][0-9]*|[A-Za-z_][-A-Za-z0-9_.]*$' # IMPORTANT: duplicate regex; "definition" in file `ok-show.py`
+    local re_begins_with_cmd='^[1-9][0-9]*|[A-Za-z_][-A-Za-z0-9_.]*' # IMPORTANT: duplicate regex; "definition" in file `ok-show.py`
+    local re_is_cmd="${re_begins_with_cmd}\$"
     local cmd=list
     local external_command=0
     local once_check=0
@@ -131,26 +132,27 @@ environment variables (for internal use):
     while (( $# > 0 && loop_args == 1 )) ; do
         case $1 in
             #commands (duplicate there in ok-show.py arguments)
-            l | list)          cmd=list; show_prompt=0; once_check=0;;
-            L | list-once)     cmd=list; show_prompt=0; once_check=1;;
-            p | list-prompt)   cmd=list; show_prompt=1; once_check=0;;
-            h | help)          cmd=usage;;
+            list)          cmd=list; show_prompt=0; once_check=0;;
+            list-once)     cmd=list; show_prompt=0; once_check=1;;
+            list-prompt)   cmd=list; show_prompt=1; once_check=0;;
+            \? | h | help) cmd=usage;;
             #options
             -V | --version)    cmd=version;;
             -\? | -h | --help) cmd=usage;;
             -v | --verbose)    verbose=2;;
             -q | --quiet)      verbose=0;;
-            -c | --comment_align) if [[ $# -ge 2 ]]; then comment_align=$2; shift; else echo "the $1 argument needs a number (0..3) as 2nd argument"; fi;;
-            -f | --file)        if [[ $# -gt 1 && -r "$2" || "-" == "$2" ]]; then ok_file="$2"; shift; else _ok_cmd_usage "No file provided, or file is not readable ($2)" || return $?; fi;;
-            -a | --alias)       if [[ $# -gt 1 && -n "$2" ]]; then args="$2"; shift; else _ok_cmd_usage "Empty or no alias provided" || return $?; fi;;
-            -*)                 cmd=usage; usage_error="Illegal option '$1'";;
-            *)                  if [[ $1 =~ $re_is_cmd ]]; then
-                                    cmd=run
-                                    external_command="$1"
-                                    loop_args=0
-                                else
-                                    cmd=usage; usage_error="Illegal command '$1'"
-                                fi;;
+            -c | --comment_align) 
+                               if [[ $# -ge 2 ]]; then comment_align=$2; shift; else echo "the $1 argument needs a number (0..3) as 2nd argument"; fi;;
+            -f | --file)       if [[ $# -gt 1 && -r "$2" || "-" == "$2" ]]; then ok_file="$2"; shift; else _ok_cmd_usage "No file provided, or file is not readable ($2)" || return $?; fi;;
+            -a | --alias)      if [[ $# -gt 1 && -n "$2" ]]; then args="$2"; shift; else _ok_cmd_usage "Empty or no alias provided" || return $?; fi;;
+            -*)                cmd=usage; usage_error="Illegal option '$1'";;
+            *)                 if [[ $1 =~ $re_is_cmd ]]; then
+                                   cmd=run
+                                   external_command="$1"
+                                   loop_args=0
+                               else
+                                   cmd=usage; usage_error="Illegal command '$1'"
+                               fi;;
         esac
         shift
     done
@@ -179,7 +181,7 @@ environment variables (for internal use):
                     return $list_result
                 elif [[ $show_prompt == 1 && $list_result == 0 ]]; then #only show prompt, if there where commands printed
                     local prompt_input
-                    local re_num_begin='^[1-9][0-9]*($| )' # You can enter arguments at the ok-prompt too, hence different regex
+                    local re_num_begin="${re_begins_with_cmd}($| )" # You can enter arguments at the ok-prompt too, hence different regex
                     # The following read doesn't work in a sub-shell, so list-prompt fails when using it in a script
                     read -rp "${c_prompt}${prompt}${c_nc}" prompt_input
                     if [[ $prompt_input =~ $re_num_begin ]]; then

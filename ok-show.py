@@ -48,10 +48,11 @@ class ParsedLine:
         self.line_nr = line_nr
         self.indent = 0
 
-    def match_command(self, command):
+    def match_command(self, command, exact_match=False):
         if self.t != 'code': return False
         if str(self.line_nr) == command: return True
-        if self.name and self.name[:len(command)] == command: return True
+        if self.name and not exact_match and self.name[:len(command)] == command: return True
+        if self.name and     exact_match and self.name == command: return True
         return False
 
     def get_line_name_or_number(self):
@@ -122,6 +123,13 @@ def parse_lines(lines, internal_commands):
         lines[0] = lines[0][1:]
     result = []
     line_nr = 0
+    # add internal commands to list (for unified processing of command names)
+    ic_nr = -len(internal_commands)
+    for ic in internal_commands:
+        # Negative line numbers (for internal book keeping)
+        result.append(ParsedLine('code', 'ok {0} "$@"'.format(ic), name=ic, line_nr=ic_nr))
+        ic_nr += 1
+
     # keep track of unique names; initialize with ok's commands
     current_commands = set(internal_commands)
     for line in lines:
@@ -194,7 +202,7 @@ def format_lines(l, heading_align, elastic_tab, nr_positions_line_nr, max_width)
             if heading_align >= 1: x.indent += nr_positions_line_nr
             if heading_align >= 2: x.indent += len(ParsedLine.ITEM_SUFFIX)
 
-def print_line(l, clr, nr_positions_line_nr, format_line):
+def print_line(l, clr, nr_positions_line_nr, format_line, verbose):
     if l.t == 'heading':
         cprint(clr.heading, ParsedLine.INDENT_CHAR*l.indent)
         cprint(None, l.line)
@@ -202,6 +210,8 @@ def print_line(l, clr, nr_positions_line_nr, format_line):
     elif l.t == 'whitespace':
         cprint(clr.nc, l.line+'\n')
     elif l.t == 'code':
+        if l.line_nr < 0 and verbose < 2:
+            return # don't print internal commands
         if format_line:
             x, y = l.get_line_name_or_number(), ''
             indent_size = nr_positions_line_nr-len(x)
@@ -232,7 +242,7 @@ def main():
     parser.add_argument('--heading_align',     '-H', metavar='HA',  type=int, default=1, choices= [0,1,2], help='Level of heading alignment. 0=no alignment, 1=left align with command colons, 2=left align with code (depends on --name_align).')
     parser.add_argument('--comment_align',     '-c', metavar='CA',  type=int, default=2, choices= [0,1,2,3], help='Level of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.')
     parser.add_argument('--terminal_width',    '-t', metavar='TW',  type=int, default=None, help='number of columns of the terminal (tput cols)')
-    parser.add_argument('--internal_commands', '-I', metavar='IC',  type=str, default='list,l,list-once,L,list-prompt,p,help,h', help='Internal commands of ok (that cannot be used as named lines)')
+    parser.add_argument('--internal_commands', '-I', metavar='IC',  type=str, default='list,list-once,list-prompt,help', help='Internal commands of ok (that cannot be used as named lines)')
 
     parser.add_argument('command',                   metavar='CMD', type=str, nargs='?', help='The command name or line number to show')
     args = parser.parse_args()
@@ -268,8 +278,9 @@ def main():
             print('* end_____: %s' % err.end,      file=sys.stderr)
         exit(1)
     # Only write warnings when showing lists
+    internal_commands = args.internal_commands.split(',')
     write_warning = dont_write_warning if execute_only else do_write_warning
-    p_lines, all_commands = parse_lines(lines, set(args.internal_commands.split(',')))
+    p_lines, all_commands = parse_lines(lines, internal_commands)
     # Calculate max with of numbers (optionally names)
     if args.name_align == 1:
         cmd_lines = [len(str(pl.line_nr)) for pl in p_lines if pl.line_nr]
@@ -295,21 +306,24 @@ def main():
             print('\t{}'.format(suggestions))
             sys.exit(2)
         elif len(p_lines) > 1:
-            print("Command '{}' is ambiguous, which command did you mean:".format(args.command))
-            names = [p_line.name for p_line in p_lines]
-            alternatives = ', '.join(names[:-1]) + ' or ' + names[-1]
-            print('\t{}'.format(alternatives))
-            sys.exit(3)
+            exact_match = [x for x in p_lines if x.match_command(args.command, exact_match=True)]
+            if len(exact_match)==0:
+                print("Command '{}' is ambiguous, which command did you mean:".format(args.command))
+                names = [p_line.name for p_line in p_lines]
+                alternatives = ', '.join(names[:-1]) + ' or ' + names[-1]
+                print('\t{}'.format(alternatives))
+                sys.exit(3)
+            p_lines = exact_match
         p_line = p_lines[0]
         current_command = p_line.get_line_name_or_number()
         if args.verbose > 1 and args.command != current_command:
             print("Matched argument '{}' with command '{}' because it was the only match".format(args.command, current_command))
         # The formated line is printed to stdout, and the actual line from .ok is printed to stderr
-        if args.verbose > 0: print_line(p_line, clr, nr_positions_line_nr, True)
-        print_line(p_line, clr, nr_positions_line_nr, False)
+        if args.verbose > 0: print_line(p_line, clr, nr_positions_line_nr, True, args.verbose)
+        print_line(p_line, clr, nr_positions_line_nr, False, args.verbose)
     else:
         for p_line in p_lines:
-            print_line(p_line, clr, nr_positions_line_nr, True)
+            print_line(p_line, clr, nr_positions_line_nr, True, args.verbose)
         if len(cmd_lines) == 0:
             sys.exit(1)
 

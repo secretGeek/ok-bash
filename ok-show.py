@@ -60,6 +60,12 @@ class ParsedLine:
         if self.line_nr is not None: return str(self.line_nr)
         return ''
 
+    def do_show(self, verbose):
+        if verbose > 1: return True
+        if self.line_nr is not None: 
+            return self.line_nr >= 0
+        return True
+
     def set_indent(self, max_pos, max_width):
         if self.pos and max_pos:
             self.indent = max_pos - self.pos
@@ -110,8 +116,7 @@ def cprint(color, text=''):
 
 def do_write_warning(text):
     x = ok_color()
-    #cprint(x.nc, '‼️  ')
-    cprint(x.error, 'WARNING: '+text)
+    cprint(x.error, text)
     cprint(x.nc, '\n')
 
 def dont_write_warning(text):
@@ -202,7 +207,7 @@ def format_lines(l, heading_align, elastic_tab, nr_positions_line_nr, max_width)
             if heading_align >= 1: x.indent += nr_positions_line_nr
             if heading_align >= 2: x.indent += len(ParsedLine.ITEM_SUFFIX)
 
-def print_line(l, clr, nr_positions_line_nr, format_line, hide_internal_commands):
+def print_line(l, clr, nr_positions_line_nr, format_line, verbose):
     if l.t == 'heading':
         cprint(clr.heading, ParsedLine.INDENT_CHAR*l.indent)
         cprint(None, l.line)
@@ -210,24 +215,23 @@ def print_line(l, clr, nr_positions_line_nr, format_line, hide_internal_commands
     elif l.t == 'whitespace':
         cprint(clr.nc, l.line+'\n')
     elif l.t == 'code':
-        if l.line_nr < 0 and hide_internal_commands:
-            return
-        if format_line:
-            x, y = l.get_line_name_or_number(), ''
-            indent_size = nr_positions_line_nr-len(x)
-            if l.name:
-                x, y = x[:l.min_name_len], x[l.min_name_len:] #
-            cprint(clr.number, indent_size*' ' + x)
-            cprint(clr.number2, y+ParsedLine.ITEM_SUFFIX)
-            if l.pos is None:
-                cprint(clr.command, l.line)
+        if l.do_show(verbose):
+            if format_line:
+                x, y = l.get_line_name_or_number(), ''
+                indent_size = nr_positions_line_nr-len(x)
+                if l.name:
+                    x, y = x[:l.min_name_len], x[l.min_name_len:] #
+                cprint(clr.number, indent_size*' ' + x)
+                cprint(clr.number2, y+ParsedLine.ITEM_SUFFIX)
+                if l.pos is None:
+                    cprint(clr.command, l.line)
+                else:
+                    cprint(clr.command, l.line[:l.pos])
+                    cprint(None, ParsedLine.INDENT_CHAR*l.indent)
+                    cprint(clr.comment, l.line[l.pos:])
+                cprint(clr.nc, '\n')
             else:
-                cprint(clr.command, l.line[:l.pos])
-                cprint(None, ParsedLine.INDENT_CHAR*l.indent)
-                cprint(clr.comment, l.line[l.pos:])
-            cprint(clr.nc, '\n')
-        else:
-            print(l.line, file=sys.stderr)
+                print(l.line, file=sys.stderr)
 
 def main():
     global write_warning
@@ -285,7 +289,7 @@ def main():
     if args.name_align == 1:
         cmd_lines = [len(str(pl.line_nr)) for pl in p_lines if pl.line_nr]
     elif args.name_align == 2:
-        cmd_lines = [len(pl.get_line_name_or_number()) for pl in p_lines]
+        cmd_lines = [len(pl.get_line_name_or_number()) for pl in p_lines if pl.do_show(args.verbose)]
     else:
         cmd_lines = []
     nr_positions_line_nr = max(cmd_lines) if len(cmd_lines)>0 else 0
@@ -319,11 +323,11 @@ def main():
         if args.verbose > 1 and args.command != current_command:
             print("Matched argument '{}' with command '{}' because it was the only match".format(args.command, current_command))
         # The formated line is printed to stdout, and the actual line from .ok is printed to stderr
-        if args.verbose > 0: print_line(p_line, clr, nr_positions_line_nr, True, args.verbose < 2)
-        print_line(p_line, clr, nr_positions_line_nr, False, False) #always print here
+        if args.verbose > 0: print_line(p_line, clr, nr_positions_line_nr, True, args.verbose)
+        print_line(p_line, clr, nr_positions_line_nr, False, 0) #always print here
     else:
         for p_line in p_lines:
-            print_line(p_line, clr, nr_positions_line_nr, True, args.verbose < 2)
+            print_line(p_line, clr, nr_positions_line_nr, True, args.verbose)
         if len(cmd_lines) == 0:
             sys.exit(1)
 

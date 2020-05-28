@@ -265,6 +265,6 @@ else
         export "${x?}"
     done
     #make ok available for scripts as well
-    #export -f ok
+    export -f ok
 fi
 unset called

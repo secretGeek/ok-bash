@@ -12,3 +12,4 @@ namaste: echo "First 3 characters same as 'named'"
 install: echo "Install"
 inst: echo "HEY!!! (inst)"
 in: echo "HEY! (in)"
+nocommand:

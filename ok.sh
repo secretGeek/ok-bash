@@ -20,11 +20,11 @@ ok() {
             local list_default=" Default command." list_prompt_default=""
         fi
         echo -e "Usage: ok [options] <named or numbered command> [script-arguments..]
-       ok <internal command> [options]
+       ok [options] <internal command> [options]
 
 command (use one):
   <number>            Run an unnamed command (the <number>th unnamed command) from the ok-file.
-  <name>              Run an named command from the ok-file (starts with a letter or underscore, followed by same or dash or numbers)
+  <name>              Run an named command from the ok-file (starts with a letter/underscore, followed by same and dash/period/numbers)
   list                Show the list from the ok-file.$list_default
   list-once           Same as list, but only show when pwd is different from when the list was last shown.
   list-prompt         Show the list and wait for input at the ok-prompt (like --list and <number> in one command).$list_prompt_default

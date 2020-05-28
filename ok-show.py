@@ -1,4 +1,4 @@
-# both python2 and python3
+#!/usr/bin/env python3    #both python2 and python3
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
@@ -242,9 +242,9 @@ def main():
     # handle arguments
     parser = argparse.ArgumentParser(description='Show the ok-file colorized (or just one line).')
     parser.add_argument('--verbose',           '-v', metavar='V',   type=int, default=1, help='0=quiet, 1=normal, 2=verbose. Defaults to 1. ')
-    parser.add_argument('--name_align',        '-n', metavar='NA',  type=int, default=2, choices= [0,1,2], help='Level of number of name alignment. 0=no alignment, 1=align numbers only (Default), 2=align numbers and names.')
+    parser.add_argument('--name_align',        '-n', metavar='NA',  type=int, default=2, choices= [0,1,2], help='Level of number of name alignment. 0=no alignment, 1=align numbers only, 2=align numbers and names. Default to 2.')
     parser.add_argument('--heading_align',     '-H', metavar='HA',  type=int, default=1, choices= [0,1,2], help='Level of heading alignment. 0=no alignment, 1=left align with command colons, 2=left align with code (depends on --name_align).')
-    parser.add_argument('--comment_align',     '-c', metavar='CA',  type=int, default=2, choices= [0,1,2,3], help='Level of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.')
+    parser.add_argument('--comment_align',     '-c', metavar='CA',  type=int, default=2, choices= [0,1,2,3], help='Level of comment alignment. 0=no alignment, 1=align consecutive lines (default), 2=including whitespace, 3 align all.')
     parser.add_argument('--terminal_width',    '-t', metavar='TW',  type=int, default=None, help='number of columns of the terminal (tput cols)')
     parser.add_argument('--internal_commands', '-I', metavar='IC',  type=str, default='list,list-once,list-prompt,help', help='Internal commands of ok (that cannot be used as named lines)')
 

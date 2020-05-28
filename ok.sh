@@ -120,7 +120,7 @@ environment variables (for internal use):
     else
         args="ok $*"
     fi
-    local re_begins_with_cmd='^[1-9][0-9]*|[A-Za-z_][-A-Za-z0-9_.]*' # IMPORTANT: duplicate regex; "definition" in file `ok-show.py`
+    local re_begins_with_cmd='^([1-9][0-9]*|[A-Za-z_][-A-Za-z0-9_.]*)' # IMPORTANT: duplicate regex; "definition" in file `ok-show.py`
     local re_is_cmd="${re_begins_with_cmd}\$"
     local cmd=list
     local external_command=0
@@ -151,7 +151,7 @@ environment variables (for internal use):
                                    external_command="$1"
                                    loop_args=0
                                else
-                                   cmd=usage; usage_error="Illegal command '$1'"
+                                   cmd=usage; usage_error="Unrecognized command '$1' with illegal characters."
                                fi;;
         esac
         shift
@@ -193,9 +193,7 @@ environment variables (for internal use):
                         if [[ -z $prompt_input || $prompt_input = "0" ]]; then
                             return 0
                         fi
-                        if [[ $verbose -ge 2 ]]; then
-                            >&2 echo "ERROR: input '$prompt_input' does not start with a number"
-                        fi
+                        >&2 echo "Unrecognized command '$prompt_input' with illegal characters."
                         return 1
                     fi
                 fi

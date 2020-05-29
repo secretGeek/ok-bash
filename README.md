@@ -155,19 +155,20 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
 
     environment variables (used for colored output; current colors are shown):
       _OK_C_HEADING      Color-code for lines starting with a comment (heading). Defaults to red.
-      _OK_C_NUMBER       Color-code for numbering. Defaults to cyan.
+      _OK_C_NUMBER       Color-code for numbering, or significant (left) part of the command. Defaults to bright cyan.
+      _OK_C_NUMBER2      Color-code for non-significant (right) part of the command. Defaults to cyan.
       _OK_C_COMMENT      Color-code for comments after commands. Defaults to blue.
       _OK_C_COMMAND      Color-code for commands. Defaults to color-reset.
       _OK_C_PROMPT       Color-code for prompt (both input as command confirmation). Defaults to color for numbering.
     environment variables (other configuration):
-      _OK_COMMENT_ALIGN  Level (unset) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
-      _OK_PROMPT         String ('=> ') used as prompt (both input as command confirmation). Defaults to '$ '.
+      _OK_COMMENT_ALIGN  Level (unset) of comment alignment. 0=no alignment, 1=align consecutive lines (default), 2=including whitespace, 3 align all.
+      _OK_PROMPT         String (unset) used as prompt (both input as command confirmation). Defaults to '$ '.
       _OK_PROMPT_DEFAULT Setting (unset) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
       _OK_VERBOSE        Level (unset) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
     environment variables (for internal use):
-      _OK__LAST_PWD      Remember the path (/Users/doekman/prj/GitHub/ok-bash) that was last listed, for use with the list-once command.
-      _OK__PATH_TO_ME    The path (/Users/doekman/prj/GitHub/ok-bash) to the location of this script.
-      _OK__PATH_TO_PYTHON The path (/usr/local/bin/python3) to the used python interpreter.
+      _OK__LAST_PWD      Remember the path (/path/to/some/place/with/an/.ok/file) that was last listed, for use with the list-once command.
+      _OK__PATH_TO_ME    The path (/path/to/ok-bash/) to the location of this script.
+      _OK__PATH_TO_PYTHON The path (/path/to/bin/python3) to the used python interpreter.
 
 
 

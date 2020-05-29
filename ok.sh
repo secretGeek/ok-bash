@@ -47,12 +47,13 @@ script-arguments:
             if [ -z ${_OK_PROMPT_DEFAULT+x} ]; then local l="unset";  else local l="$_OK_PROMPT_DEFAULT"; fi
             echo -e "environment variables (used for colored output; current colors are shown):
   _OK_C_HEADING      ${_OK_C_HEADING:-}Color-code${c_nc} for lines starting with a comment (heading). Defaults to red.
-  _OK_C_NUMBER       ${_OK_C_NUMBER:-}Color-code${c_nc} for numbering. Defaults to cyan.
+  _OK_C_NUMBER       ${_OK_C_NUMBER:-}Color-code${c_nc} for numbering, or significant (left) part of the command. Defaults to bright cyan.
+  _OK_C_NUMBER2      ${_OK_C_NUMBER2:-}Color-code${c_nc} for non-significant (right) part of the command. Defaults to cyan.
   _OK_C_COMMENT      ${_OK_C_COMMENT:-}Color-code${c_nc} for comments after commands. Defaults to blue.
   _OK_C_COMMAND      ${_OK_C_COMMAND:-}Color-code${c_nc} for commands. Defaults to color-reset.
   _OK_C_PROMPT       ${_OK_C_PROMPT:-}Color-code${c_nc} for prompt (both input as command confirmation). Defaults to color for numbering.
 environment variables (other configuration):
-  _OK_COMMENT_ALIGN  Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
+  _OK_COMMENT_ALIGN  Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines (default), 2=including whitespace, 3 align all.
   _OK_PROMPT         String ($p) used as prompt (both input as command confirmation). Defaults to '$ '.
   _OK_PROMPT_DEFAULT Setting ($l) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
   _OK_VERBOSE        Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
@@ -90,10 +91,8 @@ environment variables (for internal use):
         shift
         # get the line to be executed
         local line_text
-        #echo ">>>ok_show $ok_file $external_command"
         line_text="$(ok_show "$ok_file" "$external_command")"
         local res=$?
-        #echo "<<<$res: $line_text"
         if [[ $res -ne 0 ]]; then
             #because stdout/stderr are swapped by ok-show.py in this case, handle this too
             >&2 echo "$line_text"

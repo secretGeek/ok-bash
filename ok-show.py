@@ -105,7 +105,7 @@ class ok_color:
         self.error   = '\033[0;33m'
         self.heading = get_env('_OK_C_HEADING', '\033[0;31m')
         self.number  = get_env('_OK_C_NUMBER',  '\033[1;36m')
-        self.number2 = get_env('_OK_C_NUMBER',  '\033[0;36m') # nog niet configureerbaar..
+        self.number2 = get_env('_OK_C_NUMBER2', '\033[0;36m')
         self.comment = get_env('_OK_C_COMMENT', '\033[0;34m')
         self.command = get_env('_OK_C_COMMAND', self.nc)
         self.prompt  = get_env('_OK_C_PROMPT',  self.number2)

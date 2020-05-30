@@ -58,9 +58,10 @@ environment variables (other configuration):
   _OK_PROMPT_DEFAULT Setting ($l) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
   _OK_VERBOSE        Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
 environment variables (for internal use):
-  _OK__LAST_PWD      Remember the path ($_OK__LAST_PWD) that was last listed, for use with the list-once command.
-  _OK__PATH_TO_ME    The path ($_OK__PATH_TO_ME) to the location of this script.
-  _OK__PATH_TO_PYTHON The path ($_OK__PATH_TO_PYTHON) to the used python interpreter.\\n"
+  _OK__DATAFILE_SIMILAR When set (${_OK__DATAFILE_SIMILAR:-unset}), data is written to specified path+filename for analytic purpose.
+  _OK__LAST_PWD         Remember the path ($_OK__LAST_PWD) that was last listed, for use with the list-once command.
+  _OK__PATH_TO_ME       The path ($_OK__PATH_TO_ME) to the location of this script.
+  _OK__PATH_TO_PYTHON   The path ($_OK__PATH_TO_PYTHON) to the used python interpreter.\\n"
         fi
         if [[ -n $1 ]]; then
             echo -e "$1\\n"
@@ -81,7 +82,7 @@ environment variables (for internal use):
             export "${x?}"
         done
 
-        "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" -v "${verbose:-1}" -c "${comment_align:-1}" -t "${twidth:-80}" "$@" < "${input}"
+        "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" -v "${verbose:-1}" -V "${version}" -c "${comment_align:-1}" -t "${twidth:-80}" "$@" < "${input}"
     }
 
     function _ok_cmd_run {

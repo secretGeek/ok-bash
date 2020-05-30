@@ -166,9 +166,10 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
       _OK_PROMPT_DEFAULT Setting (unset) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
       _OK_VERBOSE        Level (unset) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
     environment variables (for internal use):
-      _OK__LAST_PWD      Remember the path (/path/to/some/place/with/an/.ok/file) that was last listed, for use with the list-once command.
-      _OK__PATH_TO_ME    The path (/path/to/ok-bash/) to the location of this script.
-      _OK__PATH_TO_PYTHON The path (/path/to/bin/python3) to the used python interpreter.
+      _OK__DATAFILE_SIMILAR When set (unset), data is written to specified path+filename for analytic purpose.
+      _OK__LAST_PWD         Remember the path (/path/to/some/place/with/an/.ok/file) that was last listed, for use with the list-once command.
+      _OK__PATH_TO_ME       The path (/path/to/ok-bash) to the location of this script.
+      _OK__PATH_TO_PYTHON   The path (/path/to/bin/python3) to the used python interpreter.
 
 
 

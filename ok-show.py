@@ -31,7 +31,21 @@ def find_similar_items(command, all_commands):
     alternatives = [a.lower() for a in all_commands]
     scores = [levenshtein(command.lower(), a) for a in alternatives]
     best_score = min(scores)
-    return [alternatives[i] for i in range(len(scores)) if scores[i]==best_score]
+    similar_items = [alternatives[i] for i in range(len(scores)) if scores[i]==best_score]
+    return log_similar_items_stats(command, all_commands, similar_items)
+
+def log_similar_items_stats(command, all_commands, similar_items):
+    if '_OK__DATAFILE_SIMILAR' in os.environ:
+        separator, subseparator = ',', ';'
+        filename = os.environ['_OK__DATAFILE_SIMILAR']
+        print_header = not os.path.exists(filename)
+        the_commands = list(all_commands) # It's handy to have this sorted (it's passed as a set)
+        the_commands.sort()
+        with open(filename, 'a') as datafile:
+            if print_header:
+                print(separator.join(['version', 'supplied_command', subseparator.join(['list','of','similar','items']), subseparator.join(['list', 'of', 'all', 'commands', 'available'])]), file=datafile)
+            print(separator.join(['-' if version_number is None else version_number, command, subseparator.join(similar_items), subseparator.join(the_commands)]), file=datafile)
+    return similar_items
 
 def ansi_len(s):
     no_ansi_s = rx.ansi_len.sub('', s)
@@ -234,7 +248,7 @@ def print_line(l, clr, nr_positions_line_nr, format_line, verbose):
                 print(l.line, file=sys.stderr)
 
 def main():
-    global write_warning
+    global write_warning, version_number
 
     # customizations
     clr = ok_color()
@@ -242,6 +256,7 @@ def main():
     # handle arguments
     parser = argparse.ArgumentParser(description='Show the ok-file colorized (or just one line).')
     parser.add_argument('--verbose',           '-v', metavar='V',   type=int, default=1, help='0=quiet, 1=normal, 2=verbose. Defaults to 1. ')
+    parser.add_argument('--version',           '-V', metavar='VER', type=str, default=None, help='To pass version number')
     parser.add_argument('--name_align',        '-n', metavar='NA',  type=int, default=2, choices= [0,1,2], help='Level of number of name alignment. 0=no alignment, 1=align numbers only, 2=align numbers and names. Default to 2.')
     parser.add_argument('--heading_align',     '-H', metavar='HA',  type=int, default=1, choices= [0,1,2], help='Level of heading alignment. 0=no alignment, 1=left align with command colons, 2=left align with code (depends on --name_align).')
     parser.add_argument('--comment_align',     '-c', metavar='CA',  type=int, default=2, choices= [0,1,2,3], help='Level of comment alignment. 0=no alignment, 1=align consecutive lines (default), 2=including whitespace, 3 align all.')
@@ -258,6 +273,7 @@ def main():
             # Python 2 doesn't have `get_terminal_size`
             args.terminal_width = 80
     execute_only = args.command is not None
+    version_number = args.version
 
     if args.verbose > 1 and not execute_only:
         print('  number_align: %d' % args.name_align)

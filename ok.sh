@@ -19,15 +19,16 @@ ok() {
         else
             local list_default=" Default command." list_prompt_default=""
         fi
-        echo -e "Usage: ok [options] <number> [script-arguments..]
-       ok command [options]
+        echo -e "Usage: ok [options] <named or numbered command> [script-arguments..]
+       ok [options] <internal command> [options]
 
 command (use one):
-  <number>            Run the <number>th command from the ok-file.
-  l, list             Show the list from the ok-file.$list_default
-  L, list-once        Same as list, but only show when pwd is different from when the list was last shown.
-  p, list-prompt      Show the list and wait for input at the ok-prompt (like --list and <number> in one command).$list_prompt_default
-  h, help             Show this usage page.
+  <number>            Run an unnamed command (the <number>th unnamed command) from the ok-file.
+  <name>              Run an named command from the ok-file (starts with a letter/underscore, followed by same and dash/period/numbers)
+  list                Show the list from the ok-file.$list_default
+  list-once           Same as list, but only show when pwd is different from when the list was last shown.
+  list-prompt         Show the list and wait for input at the ok-prompt (like --list and <number> in one command).$list_prompt_default
+  help                Show this usage page.
 options:
   -c, --comment_align N  Level of comment alignment. See \$_OK_COMMENT_ALIGN
   -v, --verbose       Show more output, mostly errors. Also it shows environment-variables in this screen.
@@ -46,19 +47,21 @@ script-arguments:
             if [ -z ${_OK_PROMPT_DEFAULT+x} ]; then local l="unset";  else local l="$_OK_PROMPT_DEFAULT"; fi
             echo -e "environment variables (used for colored output; current colors are shown):
   _OK_C_HEADING      ${_OK_C_HEADING:-}Color-code${c_nc} for lines starting with a comment (heading). Defaults to red.
-  _OK_C_NUMBER       ${_OK_C_NUMBER:-}Color-code${c_nc} for numbering. Defaults to cyan.
+  _OK_C_NUMBER       ${_OK_C_NUMBER:-}Color-code${c_nc} for numbering, or significant (left) part of the command. Defaults to bright cyan.
+  _OK_C_NUMBER2      ${_OK_C_NUMBER2:-}Color-code${c_nc} for non-significant (right) part of the command. Defaults to cyan.
   _OK_C_COMMENT      ${_OK_C_COMMENT:-}Color-code${c_nc} for comments after commands. Defaults to blue.
   _OK_C_COMMAND      ${_OK_C_COMMAND:-}Color-code${c_nc} for commands. Defaults to color-reset.
   _OK_C_PROMPT       ${_OK_C_PROMPT:-}Color-code${c_nc} for prompt (both input as command confirmation). Defaults to color for numbering.
 environment variables (other configuration):
-  _OK_COMMENT_ALIGN  Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
+  _OK_COMMENT_ALIGN  Level ($e) of comment alignment. 0=no alignment, 1=align consecutive lines (default), 2=including whitespace, 3 align all.
   _OK_PROMPT         String ($p) used as prompt (both input as command confirmation). Defaults to '$ '.
   _OK_PROMPT_DEFAULT Setting ($l) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
   _OK_VERBOSE        Level ($v) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
 environment variables (for internal use):
-  _OK__LAST_PWD      Remember the path ($_OK__LAST_PWD) that was last listed, for use with the list-once command.
-  _OK__PATH_TO_ME    The path ($_OK__PATH_TO_ME) to the location of this script.
-  _OK__PATH_TO_PYTHON The path ($_OK__PATH_TO_PYTHON) to the used python interpreter.\\n"
+  _OK__DATAFILE_SIMILAR When set (${_OK__DATAFILE_SIMILAR:-unset}), data is written to specified path+filename for analytic purpose.
+  _OK__LAST_PWD         Remember the path ($_OK__LAST_PWD) that was last listed, for use with the list-once command.
+  _OK__PATH_TO_ME       The path ($_OK__PATH_TO_ME) to the location of this script.
+  _OK__PATH_TO_PYTHON   The path ($_OK__PATH_TO_PYTHON) to the used python interpreter.\\n"
         fi
         if [[ -n $1 ]]; then
             echo -e "$1\\n"
@@ -74,18 +77,22 @@ environment variables (for internal use):
             input="/dev/stdin"
         fi
         twidth="$(stty size|awk '{print $2}')"
+        # Make sure colors are exported, so python can use them
+        for x in $(set | grep "^_OK_C_" | awk -F '=' '{print $1}'); do 
+            export "${x?}"
+        done
 
-        "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" -v "${verbose:-1}" -c "${comment_align:-1}" -t "${twidth:-80}" "$@" < "${input}"
+        "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" -v "${verbose:-1}" -V "${version}" -c "${comment_align:-1}" -t "${twidth:-80}" "$@" < "${input}"
     }
 
     function _ok_cmd_run {
         unset -f _ok_cmd_run
         # save and remove argument. Remaining arguments are passwed to eval automatically
-        local line_nr=$1 #LINE_NR is guaranteed to be 1 or more
+        local external_command=$1 #LINE_NR is guaranteed to be 1 or more
         shift
         # get the line to be executed
         local line_text
-        line_text="$(ok_show "$ok_file" "$line_nr")"
+        line_text="$(ok_show "$ok_file" "$external_command")"
         local res=$?
         if [[ $res -ne 0 ]]; then
             #because stdout/stderr are swapped by ok-show.py in this case, handle this too
@@ -113,38 +120,40 @@ environment variables (for internal use):
     else
         args="ok $*"
     fi
-    local re_is_num='^[1-9][0-9]*$' #numbers starting with "0" would be octal, and nobody knows those (also: sed on Linux complains about line "0")...
+    local re_begins_with_cmd='^([1-9][0-9]*|[A-Za-z_][-A-Za-z0-9_.]*)' # IMPORTANT: duplicate regex; "definition" in file `ok-show.py`
+    local re_is_cmd="${re_begins_with_cmd}\$"
     local cmd=list
-    local line_nr=0
+    local external_command=0
     local once_check=0
     local show_prompt=${_OK_PROMPT_DEFAULT:-0}
     local comment_align=${_OK_COMMENT_ALIGN:-1}
     local usage_error=
     local loop_args=1 #the Pascal-way to break loops
     while (( $# > 0 && loop_args == 1 )) ; do
-        # if the user provided a parameter, $1, which contains a number...
-        if [[ $1 =~ $re_is_num ]]; then
-            cmd=run
-            line_nr=$1
-            loop_args=0
-        else
-            case $1 in
-                #commands
-                l | list)          cmd=list; show_prompt=0; once_check=0;;
-                L | list-once)     cmd=list; show_prompt=0; once_check=1;;
-                p | list-prompt)   cmd=list; show_prompt=1; once_check=0;;
-                h | help)          cmd=usage;;
-                #options
-                -V | --version)    cmd=version;;
-                -\? | -h | --help) cmd=usage;;
-                -v | --verbose)    verbose=2;;
-                -q | --quiet)      verbose=0;;
-                -c | --comment_align) if [[ $# -ge 2 ]]; then comment_align=$2; shift; else echo "the $1 argument needs a number (0..3) as 2nd argument"; fi;;
-                -f | --file)       if [[ $# -gt 1 && -r "$2" || "-" == "$2" ]]; then ok_file="$2"; shift; else _ok_cmd_usage "No file provided, or file is not readable ($2)" || return $?; fi;;
-                -a | --alias)      if [[ $# -gt 1 && -n "$2" ]]; then args="$2"; shift; else _ok_cmd_usage "Empty or no alias provided" || return $?; fi;;
-                *)                 cmd=usage; usage_error="Unknown command/option '$1'";;
-            esac
-        fi
+        case $1 in
+            #commands (duplicate there in ok-show.py arguments)
+            list)          cmd=list; show_prompt=0; once_check=0;;
+            list-once)     cmd=list; show_prompt=0; once_check=1;;
+            list-prompt)   cmd=list; show_prompt=1; once_check=0;;
+            \? | h | help) cmd=usage;;
+            #options
+            -V | --version)    cmd=version;;
+            -\? | -h | --help) cmd=usage;;
+            -v | --verbose)    verbose=2;;
+            -q | --quiet)      verbose=0;;
+            -c | --comment_align) 
+                               if [[ $# -ge 2 ]]; then comment_align=$2; shift; else echo "the $1 argument needs a number (0..3) as 2nd argument"; fi;;
+            -f | --file)       if [[ $# -gt 1 && -r "$2" || "-" == "$2" ]]; then ok_file="$2"; shift; else _ok_cmd_usage "No file provided, or file is not readable ($2)" || return $?; fi;;
+            -a | --alias)      if [[ $# -gt 1 && -n "$2" ]]; then args="$2"; shift; else _ok_cmd_usage "Empty or no alias provided" || return $?; fi;;
+            -*)                cmd=usage; usage_error="Illegal option '$1'";;
+            *)                 if [[ $1 =~ $re_is_cmd ]]; then
+                                   cmd=run
+                                   external_command="$1"
+                                   loop_args=0
+                               else
+                                   cmd=usage; usage_error="Unrecognized command '$1' with illegal characters."
+                               fi;;
+        esac
         shift
     done
     # When no ok_file supplied, check if a default one is readable
@@ -163,7 +172,7 @@ environment variables (for internal use):
         echo "ok-bash $version"
     elif [[ - == "$ok_file" || -r "$ok_file" ]]; then
         if [[ $cmd == run ]]; then
-            _ok_cmd_run "$line_nr" "$@" || return $?
+            _ok_cmd_run "$external_command" "$@" || return $?
         elif [[ $cmd == list ]]; then
             if [[ $once_check == 0 || ($once_check == 1 && $_OK__LAST_PWD != $(pwd)) ]]; then
                 ok_show "$ok_file" || return $?
@@ -172,7 +181,7 @@ environment variables (for internal use):
                     return $list_result
                 elif [[ $show_prompt == 1 && $list_result == 0 ]]; then #only show prompt, if there where commands printed
                     local prompt_input
-                    local re_num_begin='^[1-9][0-9]*($| )' # You can enter arguments at the ok-prompt too, hence different regex
+                    local re_num_begin="${re_begins_with_cmd}($| )" # You can enter arguments at the ok-prompt too, hence different regex
                     # The following read doesn't work in a sub-shell, so list-prompt fails when using it in a script
                     read -rp "${c_prompt}${prompt}${c_nc}" prompt_input
                     if [[ $prompt_input =~ $re_num_begin ]]; then
@@ -184,9 +193,7 @@ environment variables (for internal use):
                         if [[ -z $prompt_input || $prompt_input = "0" ]]; then
                             return 0
                         fi
-                        if [[ $verbose -ge 2 ]]; then
-                            >&2 echo "ERROR: input '$prompt_input' does not start with a number"
-                        fi
+                        >&2 echo "Unrecognized command '$prompt_input' with illegal characters."
                         return 1
                     fi
                 fi

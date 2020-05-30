@@ -1,5 +1,6 @@
-# This `.ok` file should not be shown
+﻿# This `.ok` file should not be shown
 # because `.ok-sh` should be used.
 # `.ok-sh` takes precedence over `.ok` when both exists
+# Also: this file is UTF-8 that starts with a BOM
 cat .ok
 cat .ok-sh

@@ -28,9 +28,9 @@ It's better than normal documentation: it's executable.
 If you run the command `ok` (with no parameters) you'll see the file listed, with numbers against each command:
 
     $ ok
-    1. ./build.sh            # builds the project
-    2. ./deploy.sh           # deploys the project
-    3. ./commit_push.sh "$1" # commit with comment, rebase and push
+    1: ./build.sh            # builds the project
+    2: ./deploy.sh           # deploys the project
+    3: ./commit_push.sh "$1" # commit with comment, rebase and push
 
 (It will also be stylishly formatted, to make it easier to read at a glance)
 
@@ -88,6 +88,29 @@ After that you can look at customization. This allows you to do things such as:
 * create your own commands that use ok-bash
 
 
+## Named commands
+
+So far every code line got a number. That is still the case, but you can optionally assign _names_ to lines. Start the line with a command name and end it with a colon.
+
+So take this `.ok` file from earlier in this document, slightly altered:
+
+    ./build.sh # builds the project
+    deploy:./deploy.sh # deploys the project
+    ./commit_push.sh "$1" # commit with comment, rebase and push
+
+When you now run `ok` you will see this:
+
+    $ ok
+         1: ./build.sh            # builds the project
+    deploy: ./deploy.sh           # deploys the project
+         3: ./commit_push.sh "$1" # commit with comment, rebase and push
+
+
+To run the second (now named) line, you can type `ok deploy`, but running `ok 2` still works. You don't even need to type the whole command: only the part from the left that's unique within the ok-file is enough. In this case that would be `ok d`, because no other command starts with the letter "d". The unique part of the name will be printed slightly brighter, if your terminal supports it.
+
+You can't use every text as a command name. The first character has to be a letter or underscore (`_`). After this, you also can use numbers, a dash (`-`) or a period (`.`). The command has to be ASCII and is interpreted case-sensitive. You can put whitespace around it, but that will be stripped because _ok-bash_ does some formatting so it looks nice.
+
+
 ## Customization
 
 If you tried to run the script directly, you might have noticed there are some options to customize `ok`. Let's show the output here:
@@ -109,20 +132,21 @@ The options shown here are called _installation helpers_. Because it's likely yo
 Before I explain these helpers, I'd like to show the `ok`-command help screen, because they are related:
 
     $ ok -v -h # The verbose option (-v) makes 'ok' also show the used environment variables
-    Usage: ok [options] <number> [script-arguments..]
-           ok command [options]
+    Usage: ok [options] <named or numbered command> [script-arguments..]
+           ok [options] <internal command> [options]
 
     command (use one):
-      <number>            Run the <number>th command from the '.ok' file.
-      l, list             Show the list from the '.ok' file. Default command.
-      L, list-once        Same as list, but only show when pwd is different from when the list was last shown.
-      p, list-prompt      Show the list and wait for input at the ok-prompt (like --list and <number> in one command).
-      h, help             Show this usage page.
+      <number>            Run an unnamed command (the <number>th unnamed command) from the ok-file.
+      <name>              Run an named command from the ok-file (starts with a letter/underscore, followed by same and dash/period/numbers)
+      list                Show the list from the ok-file. Default command.
+      list-once           Same as list, but only show when pwd is different from when the list was last shown.
+      list-prompt         Show the list and wait for input at the ok-prompt (like --list and <number> in one command).
+      help                Show this usage page.
     options:
       -c, --comment_align N  Level of comment alignment. See $_OK_COMMENT_ALIGN
       -v, --verbose       Show more output, mostly errors. Also it shows environment-variables in this screen.
       -q, --quiet         Only show really necessary output, so surpress echoing the command.
-      -f, --file <file>   Use a custom file instead of '.ok'; use '-' for stdin
+      -f, --file <file>   Use a custom file instead of the default '.ok-sh' and '.ok' files; use '-' for stdin
       -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
       -V, --version       Show version number and exit
       -h, --help          Show this help screen
@@ -131,18 +155,22 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
 
     environment variables (used for colored output; current colors are shown):
       _OK_C_HEADING      Color-code for lines starting with a comment (heading). Defaults to red.
-      _OK_C_NUMBER       Color-code for numbering. Defaults to cyan.
+      _OK_C_NUMBER       Color-code for numbering, or significant (left) part of the command. Defaults to bright cyan.
+      _OK_C_NUMBER2      Color-code for non-significant (right) part of the command. Defaults to cyan.
       _OK_C_COMMENT      Color-code for comments after commands. Defaults to blue.
       _OK_C_COMMAND      Color-code for commands. Defaults to color-reset.
       _OK_C_PROMPT       Color-code for prompt (both input as command confirmation). Defaults to color for numbering.
     environment variables (other configuration):
-      _OK_COMMENT_ALIGN  Level (unset) of comment alignment. 0=no alignment, 1=align consecutive lines (Default), 2=including whitespace, 3 align all.
+      _OK_COMMENT_ALIGN  Level (unset) of comment alignment. 0=no alignment, 1=align consecutive lines (default), 2=including whitespace, 3 align all.
       _OK_PROMPT         String (unset) used as prompt (both input as command confirmation). Defaults to '$ '.
       _OK_PROMPT_DEFAULT Setting (unset) if the prompt is default shown. 1=use command list-prompt when issuing no command, otherwise use list.
       _OK_VERBOSE        Level (unset) of feedback ok provides. 0=quiet, 1=normal, 2=verbose. Defaults to 1. Can be overriden with --verbose or --quiet.
     environment variables (for internal use):
-      _OK__LAST_PWD      Remember the path (/path/to/some/place/with/an/.ok/file) that was last listed, for use with the list-once command.
-      _OK__PATH_TO_ME    The path (/path/to/ok-bash) to the location of this script.
+      _OK__DATAFILE_SIMILAR When set (unset), data is written to specified path+filename for analytic purpose.
+      _OK__LAST_PWD         Remember the path (/path/to/some/place/with/an/.ok/file) that was last listed, for use with the list-once command.
+      _OK__PATH_TO_ME       The path (/path/to/ok-bash) to the location of this script.
+      _OK__PATH_TO_PYTHON   The path (/path/to/bin/python3) to the used python interpreter.
+
 
 
 How this all works together is explained below.
@@ -157,9 +185,9 @@ So if you want to change the prompt to `% ` and want `ok` to prompt for a line n
 The example from the beginning of this README will look like the following (the `$` is bash' prompt, and the `%` is ok's prompt now; we just changed the prompt, remember?):
 
     $ ok
-    1. ./build.sh            # builds the project
-    2. ./deploy.sh           # deploys the project
-    3. ./commit_push.sh "$1" # commit with comment, rebase and push
+    1: ./build.sh            # builds the project
+    2: ./deploy.sh           # deploys the project
+    3: ./commit_push.sh "$1" # commit with comment, rebase and push
     % 3 "Added laser guidance system"
     % ./commit_push.sh "$1" # commit with comment, rebase and push
 

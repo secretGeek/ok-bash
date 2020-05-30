@@ -1,0 +1,15 @@
+# Some test-cases for numbered and named commands
+echo "Numbered line (1)"
+named: echo "Named line"
+named: echo "Numbered line (2), because of duplicate command name"
+list: echo "Numbered line (3), because of using internal command"
+1ist: echo "Numbered line (4), illegal command name (L replaced by One)"
+tëßt: echo "Numbered line (5), also illegal command name"
+echo "Test: numbered line (6), colon within string"
+curl --head https://blog.zanstra.com/ # Numbered line (7), test colon of https:// 
+# Some test-cases for command name matching
+namaste: echo "First 3 characters same as 'named'"
+install: echo "Install"
+inst: echo "HEY!!! (inst)"
+in: echo "HEY! (in)"
+nocommand:

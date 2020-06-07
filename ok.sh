@@ -264,7 +264,5 @@ else
     for x in $(set | grep "^_OK_" | awk -F '=' '{print $1}'); do 
         export "${x?}"
     done
-    #make ok available for scripts as well
-    export -f ok
 fi
 unset called

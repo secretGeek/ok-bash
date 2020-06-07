@@ -73,16 +73,24 @@ environment variables (for internal use):
         local twidth
         local input="${1:--}"
         shift
+        #Apparently bash-arrays on macOS can't be empty, so initialize it with something that's always needed
+        local -a ok_show_args=(--version "$version" --verbose "$verbose" --comment_align "$comment_align")
         if [[ $input = - ]]; then # Prevent shellcheck's "useless cat"-warning
             input="/dev/stdin"
+        else
+            #pass width, because python2 can't determine this
+            #also, `stty size` doesn't work inside a pipe, so that's why it's here...
+            twidth="$(stty size|awk '{print $2}')"
+            if [[ ${twidth:-} ]]; then
+                ok_show_args=("${ok_show_args[@]}" --terminal_width "$twidth")
+            fi
         fi
-        twidth="$(stty size|awk '{print $2}')"
         # Make sure colors are exported, so python can use them
         for x in $(set | grep "^_OK_C_" | awk -F '=' '{print $1}'); do 
             export "${x?}"
         done
 
-        "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" -v "${verbose:-1}" -V "${version}" -c "${comment_align:-1}" -t "${twidth:-80}" "$@" < "${input}"
+        "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" "${ok_show_args[@]}" "$@" < "$input"
     }
 
     function _ok_cmd_run {
@@ -126,7 +134,7 @@ environment variables (for internal use):
     local external_command=0
     local once_check=0
     local show_prompt=${_OK_PROMPT_DEFAULT:-0}
-    local comment_align=${_OK_COMMENT_ALIGN:-1}
+    local comment_align=${_OK_COMMENT_ALIGN:-2}
     local usage_error=
     local loop_args=1 #the Pascal-way to break loops
     while (( $# > 0 && loop_args == 1 )) ; do

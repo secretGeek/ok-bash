@@ -111,6 +111,25 @@ To run the second (now named) line, you can type `ok deploy`, but running `ok 2`
 You can't use every text as a command name. The first character has to be a letter or underscore (`_`). After this, you also can use numbers, a dash (`-`) or a period (`.`). The command has to be ASCII and is interpreted case-sensitive. You can put whitespace around it, but that will be stripped because _ok-bash_ does some formatting so it looks nice.
 
 
+## Auto completion
+
+<mark>this section will probably change</mark>
+
+Work-in-progress support for [auto-complete](https://unix.stackexchange.com/a/291867) in bash, add this line after _ok-bash_ installation:
+
+	. "${_OK__PATH_TO_ME}/ok-complete.bash"
+
+This will auto-complete internal and named commands, when you press tab.
+
+	$ ok li[TAB]	     # press TAB key
+	$ ok list[BEL]	     # it completes to list, but alerts with a BELL becuase there are more options 
+	$ ok list[TAB][TAB]  # pressing TAB twice shows the options
+	list         list-once    list-prompt
+	# ok list
+
+Also: auto-complete is not always necessary. When there's only one option, ok-bash will also function without the completion...
+
+
 ## Customization
 
 If you tried to run the script directly, you might have noticed there are some options to customize `ok`. Let's show the output here:

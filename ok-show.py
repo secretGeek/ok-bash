@@ -263,7 +263,7 @@ def main():
     parser.add_argument('--terminal_width',    '-t', metavar='TW',  type=int, default=None, help='number of columns of the terminal (tput cols)')
     parser.add_argument('--internal_commands', '-I', metavar='IC',  type=str, default='list,list-once,list-prompt,help', help='Internal commands of ok (that cannot be used as named lines)')
 
-    parser.add_argument('command',                   metavar='CMD', type=str, nargs='?', help='The command name or line number to show')
+    parser.add_argument('command',                   metavar='CMD', type=str, nargs='?', help='The command name or line number to show (system commands: .list_commands)')
     args = parser.parse_args()
 
     if args.terminal_width is None:
@@ -272,7 +272,8 @@ def main():
         else:
             # Python 2 doesn't have `get_terminal_size`
             args.terminal_width = 80
-    execute_only = args.command is not None
+    execute_only = args.command is not None and not args.command.startswith('.')
+    system_command = args.command is not None and args.command.startswith('.')
     version_number = args.version
 
     if args.verbose > 1 and not execute_only:
@@ -311,8 +312,13 @@ def main():
     nr_positions_line_nr = max(cmd_lines) if len(cmd_lines)>0 else 0
     format_lines(p_lines, args.heading_align, args.comment_align, nr_positions_line_nr, args.terminal_width)
 
-    # execute
-    if execute_only:
+    if system_command:
+        if args.command == '.list_commands':
+            print(' '.join([p_line.get_line_name_or_number() for p_line in p_lines if p_line.name is not None]+internal_commands))
+        else:
+            print('Unknown system command "{}"'.format(args.command))
+            sys.exit(1)
+    elif execute_only:
         # swap stdout and stderr (the calling shell-script needs a unformated string, and we need to print something to the display as well)
         (sys.stdout, sys.stderr) = (sys.stderr, sys.stdout)
         p_lines = [x for x in p_lines if x.match_command(args.command)]

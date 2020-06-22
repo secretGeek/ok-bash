@@ -5,9 +5,12 @@
 - `ok --[TAB][TAB]`: show all long form options (same as options in `ok -h`)
 - `ok --a[TAB]`: expands to `ok --alias `
 - `ok --alias [TAB]`: doesn't expand; `[BEL]`, because after `--alias` a `<name>` is expected which can't be auto-completed.
-    + no support for <file> after `--file` option for now
+- `ok --comment-align [TAB][TAB]`: shows a slider you can adjust with your trackpad; ehm.... Sorry, doesn't expand; `[BEL]` ;-)
 - `ok -c 2[TAB][TAB]`: doesn't expand; same reason
 - `ok -c 2 [TAB][TAB]`: show all internal and named commands
+- `ok --file [TAB][TAB]`: shows all files in current folder
+- `ok --file test/[TAB][TAB]`: shows all files in the folder `test`
+- `ok --file test/.ok-[TAB]`: extands to `ok --file test/.ok-sh`
 - `ok li[TAB]`: extands to `ok list[BEL]`
 - `ok list -[TAB]`: doesn't expand (options after command are passed through.
     + no support for options after internal commands for now
@@ -31,9 +34,13 @@ _ok_complete_bash()
 		fi
 		((i+=1))
 	done
+	cur="${COMP_WORDS[$COMP_CWORD]}"
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
-	if [[ ! $prev =~ $double_options ]]; then
-		cur="${COMP_WORDS[$COMP_CWORD]}"
+	if [[ $prev =~ $double_options ]]; then
+		if [[ $prev == "--file" || $prev == "-f" ]]; then
+			COMPREPLY=( $(compgen -f "${cur}") )
+		fi
+	else
 		if [[ $cur == -* ]]; then
 			opts="$(ok --sys-opts)" #only show options, when a dash is entered
 		else
@@ -43,4 +50,3 @@ _ok_complete_bash()
 	fi
 }
 complete -F _ok_complete_bash ok
-

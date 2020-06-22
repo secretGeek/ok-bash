@@ -115,11 +115,9 @@ You can't use every text as a command name. The first character has to be a lett
 
 <mark>this section will probably change</mark>
 
-Work-in-progress support for [auto-complete](https://unix.stackexchange.com/a/291867) in bash, add this line after _ok-bash_ installation:
+Work-in-progress support for [auto-complete](https://unix.stackexchange.com/a/291867) in bash. Sourcing `ok.sh` in Bash will automatically load auto complete.
 
-	. "${_OK__PATH_TO_ME}/ok-complete.bash"
-
-This will auto-complete internal and named commands, when you press tab.
+Auto-complete will complete _internal_ and _named_ commands, when you press tab.
 
 	$ ok li[TAB]	     # press TAB key
 	$ ok list[BEL]	     # it completes to list, but alerts with a BELL becuase there are more options 
@@ -127,7 +125,7 @@ This will auto-complete internal and named commands, when you press tab.
 	list         list-once    list-prompt
 	# ok list
 
-Also: auto-complete is not always necessary. When there's only one option, ok-bash will also function without the completion...
+Note: auto-complete is not always necessary. When there's only one option, ok-bash will also function without the completion...
 
 
 ## Customization

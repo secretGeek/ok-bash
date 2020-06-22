@@ -272,5 +272,9 @@ else
     for x in $(set | grep "^_OK_" | awk -F '=' '{print $1}'); do 
         export "${x?}"
     done
+    # Initialize auto-complete, when in Bash
+    if [ -n "$BASH_VERSION" ]; then
+        . "${_OK__PATH_TO_ME}/ok-complete.bash"
+    fi
 fi
 unset called

@@ -117,15 +117,16 @@ You can't use every text as a command name. The first character has to be a lett
 
 Work-in-progress support for [auto-complete](https://unix.stackexchange.com/a/291867) in bash. Sourcing `ok.sh` in Bash will automatically load auto complete.
 
-Auto-complete will complete _internal_ and _named_ commands, when you press tab.
+Auto-complete will complete _internal_ and _named_ commands, when you press tab. (Long form) options will auto-complete after you enter a dash.
 
 	$ ok li[TAB]	     # press TAB key
 	$ ok list[BEL]	     # it completes to list, but alerts with a BELL becuase there are more options 
 	$ ok list[TAB][TAB]  # pressing TAB twice shows the options
 	list         list-once    list-prompt
-	# ok list
+	# ok --[TAB][TAB]    # type a dash to auto-complete options
+	--alias   --comment_align   --file   --help   --quiet   --verbose   --version
 
-Note: auto-complete is not always necessary. When there's only one option, ok-bash will also function without the completion...
+See the file `ok-complete.bash` for all cases covered.
 
 
 ## Customization

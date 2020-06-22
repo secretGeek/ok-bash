@@ -121,10 +121,10 @@ Some examples:
 	$ ok list[BEL]	     # it completes to 'list', but alerts with a BEL because there are multiple expansions 
 	$ ok list[TAB][TAB]  # pressing TAB twice shows the expansions
 	list         list-once    list-prompt
-	# ok --[TAB][TAB]    # type a dash to auto-complete options
+	$ ok --[TAB][TAB]    # type a dash to auto-complete options
 	--alias   --comment_align   --file   --help   --quiet   --verbose   --version
-	# ok [TAB][TAB]      # shows all internal and named commands available
-	args   args-all   color.custom   color.reset   color.text   help   list   list-once   list-prompt   show-env
+	$ ok [TAB][TAB]      # shows all internal and named commands available
+	args  args-all  color.custom  color.reset  color.text  help  list  list-once  list-prompt  show-env
 
 
 ## Customization

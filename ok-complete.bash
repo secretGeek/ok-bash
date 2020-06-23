@@ -5,7 +5,7 @@
 - `ok --[TAB][TAB]`: show all long form options (same as options in `ok -h`)
 - `ok --a[TAB]`: expands to `ok --alias `
 - `ok --alias [TAB]`: doesn't expand; `[BEL]`, because after `--alias` a `<name>` is expected which can't be auto-completed.
-- `ok --comment-align [TAB][TAB]`: shows a slider you can adjust with your trackpad; ehm.... Sorry, doesn't expand; `[BEL]` ;-)
+- `ok --comment-align [TAB][TAB]`: shows a slider you can adjust with your trackpad; ehm.... sorry, doesn't expand; `[BEL]` ;-)
 - `ok -c 2[TAB][TAB]`: doesn't expand; same reason
 - `ok -c 2 [TAB][TAB]`: show all internal and named commands
 - `ok --file [TAB][TAB]`: shows all files in current folder

@@ -122,7 +122,7 @@ Some examples:
 	$ ok list[TAB][TAB]  # pressing TAB twice shows the expansions
 	list         list-once    list-prompt
 	$ ok --[TAB][TAB]    # type a dash to auto-complete options
-	--alias   --comment_align   --file   --help   --quiet   --verbose   --version
+	--alias   --comment-align   --file   --help   --quiet   --verbose   --version
 	$ ok [TAB][TAB]      # shows all internal and named commands available
 	args  args-all  color.custom  color.reset  color.text  help  list  list-once  list-prompt  show-env
 
@@ -159,7 +159,7 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
       list-prompt         Show the list and wait for input at the ok-prompt (like --list and <number> in one command).
       help                Show this usage page.
     options:
-      -c, --comment_align N  Level of comment alignment. See $_OK_COMMENT_ALIGN
+      -c, --comment-align N  Level of comment alignment. See $_OK_COMMENT_ALIGN
       -v, --verbose       Show more output, mostly errors. Also it shows environment-variables in this screen.
       -q, --quiet         Only show really necessary output, so surpress echoing the command.
       -f, --file <file>   Use a custom file instead of the default '.ok-sh' and '.ok' files; use '-' for stdin

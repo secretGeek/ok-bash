@@ -166,6 +166,9 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
       -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
       -V, --version       Show version number and exit
       -h, --help          Show this help screen
+    system options:
+      --sys-cmds          Show all commands, space seperated (used for auto-complete)
+      --sys-opts          Show all options (long form), space seperated (used for auto-complete)
     script-arguments:
       ...                 These are passed through, when a line is executed (you can enter these too at the ok-prompt)
 

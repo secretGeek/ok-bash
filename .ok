@@ -12,7 +12,8 @@ args: echo "Passed arguments: 1:[$1], 2:[$2], 3:[$3], 4+:[${*:4}] (nr args: $#)"
 args-all: echo "All passed arguments (no comment on this line): [$*]"
 cd test
 
-ok help --verbose # Show help page of 🆗, including environment variables
+env-reset: for x in $(set|grep "^_OK_[^_]"|awk -F = '{print $1}');do unset "$x";done # for when updating README help part
+ok --verbose help  # Show help page of 🆗, including environment variables
 show-env: set | grep "^_OK_" # Show all set environment variables, used with ok-bash
 echo -e "$PROMPT_COMMAND" # This variable can be changed with the reset/auto_show install helpers
 alias SSH='ok -v -f ~/.ssh/.ok -a SSH' # Keep a list of all your `ssh` connections; use it via `SSH`

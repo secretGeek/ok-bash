@@ -111,6 +111,22 @@ To run the second (now named) line, you can type `ok deploy`, but running `ok 2`
 You can't use every text as a command name. The first character has to be a letter or underscore (`_`). After this, you also can use numbers, a dash (`-`) or a period (`.`). The command has to be ASCII and is interpreted case-sensitive. You can put whitespace around it, but that will be stripped because _ok-bash_ does some formatting so it looks nice.
 
 
+## Auto completion
+
+Installing `ok.sh` in Bash will automatically initialize auto complete. Pressing the `TAB`-key will complete _internal_ and _named_ commands. (Long form) options will auto-complete after you enter a dash.
+
+Some examples:
+
+	$ ok li[TAB]	     # press TAB key
+	$ ok list[BEL]	     # it completes to 'list', but alerts with a BEL because there are multiple expansions 
+	$ ok list[TAB][TAB]  # pressing TAB twice shows the expansions
+	list         list-once    list-prompt
+	$ ok --[TAB][TAB]    # type a dash to auto-complete options
+	--alias   --comment-align   --file   --help   --quiet   --verbose   --version
+	$ ok [TAB][TAB]      # shows all internal and named commands available
+	args  args-all  color.custom  color.reset  color.text  help  list  list-once  list-prompt  show-env
+
+
 ## Customization
 
 If you tried to run the script directly, you might have noticed there are some options to customize `ok`. Let's show the output here:
@@ -143,13 +159,16 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
       list-prompt         Show the list and wait for input at the ok-prompt (like --list and <number> in one command).
       help                Show this usage page.
     options:
-      -c, --comment_align N  Level of comment alignment. See $_OK_COMMENT_ALIGN
+      -c, --comment-align N  Level of comment alignment. See $_OK_COMMENT_ALIGN
       -v, --verbose       Show more output, mostly errors. Also it shows environment-variables in this screen.
       -q, --quiet         Only show really necessary output, so surpress echoing the command.
       -f, --file <file>   Use a custom file instead of the default '.ok-sh' and '.ok' files; use '-' for stdin
       -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
       -V, --version       Show version number and exit
       -h, --help          Show this help screen
+    system options:
+      --sys-cmds          Show all commands, space seperated (used for auto-complete)
+      --sys-opts          Show all options (long form), space seperated (used for auto-complete)
     script-arguments:
       ...                 These are passed through, when a line is executed (you can enter these too at the ok-prompt)
 

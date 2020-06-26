@@ -30,14 +30,19 @@ command (use one):
   list-prompt         Show the list and wait for input at the ok-prompt (like --list and <number> in one command).$list_prompt_default
   help                Show this usage page.
 options:
-  -c, --comment_align N  Level of comment alignment. See \$_OK_COMMENT_ALIGN
+  -c, --comment-align N  Level of comment alignment. See \$_OK_COMMENT_ALIGN
   -v, --verbose       Show more output, mostly errors. Also it shows environment-variables in this screen.
   -q, --quiet         Only show really necessary output, so surpress echoing the command.
   -f, --file <file>   Use a custom file instead of the default '.ok-sh' and '.ok' files; use '-' for stdin
   -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
   -V, --version       Show version number and exit
-  -h, --help          Show this help screen
-script-arguments:
+  -h, --help          Show this help screen"
+        if [[ $verbose -ge 2 ]]; then
+            echo -e "system options:
+  --sys-cmds          Show all commands, space seperated (used for auto-complete)
+  --sys-opts          Show all options (long form), space seperated (used for auto-complete)"
+        fi
+        echo -e "script-arguments:
   ...                 These are passed through, when a line is executed (you can enter these too at the ok-prompt)\\n"
 
         if [[ $verbose -ge 2 ]]; then
@@ -64,7 +69,7 @@ environment variables (for internal use):
   _OK__PATH_TO_PYTHON   The path ($_OK__PATH_TO_PYTHON) to the used python interpreter.\\n"
         fi
         if [[ -n $1 ]]; then
-            echo -e "$1\\n"
+            echo -e "\\a$1\\n"
             return 1
         fi
     }
@@ -89,14 +94,13 @@ environment variables (for internal use):
         for x in $(set | grep "^_OK_C_" | awk -F '=' '{print $1}'); do 
             export "${x?}"
         done
-
         "${_OK__PATH_TO_PYTHON:-$(command -v python3 || command -v python)}" "${_OK__PATH_TO_ME}/ok-show.py" "${ok_show_args[@]}" "$@" < "$input"
     }
 
     function _ok_cmd_run {
         unset -f _ok_cmd_run
         # save and remove argument. Remaining arguments are passwed to eval automatically
-        local external_command=$1 #LINE_NR is guaranteed to be 1 or more
+        local external_command="$1" #LINE_NR is guaranteed to be 1 or more
         shift
         # get the line to be executed
         local line_text
@@ -110,7 +114,7 @@ environment variables (for internal use):
         eval "$line_text"
     }
 
-    local -r version="0.8.2dev"
+    local -r version="0.8.4dev"
     # used for colored output (see: https://stackoverflow.com/a/20983251/56)
     # notice: this is partly a duplication from code in ok-show.py
     local -r c_nc=$'\033''[0m'
@@ -149,10 +153,13 @@ environment variables (for internal use):
             -\? | -h | --help) cmd=usage;;
             -v | --verbose)    verbose=2;;
             -q | --quiet)      verbose=0;;
-            -c | --comment_align) 
-                               if [[ $# -ge 2 ]]; then comment_align=$2; shift; else echo "the $1 argument needs a number (0..3) as 2nd argument"; fi;;
+            -c | --comment_align | --comment-align) # between words seperator: bash=prefer dash; python=prefer underscore 
+                               if [[ $# -ge 2 ]]; then comment_align=$2; shift; else _ok_cmd_usage "the '$1' argument needs a number (0..3) as 2nd argument" || return $?; fi;;
             -f | --file)       if [[ $# -gt 1 && -r "$2" || "-" == "$2" ]]; then ok_file="$2"; shift; else _ok_cmd_usage "No file provided, or file is not readable ($2)" || return $?; fi;;
             -a | --alias)      if [[ $# -gt 1 && -n "$2" ]]; then args="$2"; shift; else _ok_cmd_usage "Empty or no alias provided" || return $?; fi;;
+            #system options
+            --sys-cmds)        cmd=".list_commands";;
+            --sys-opts)        cmd=noop; echo "--version --help --verbose --quiet --comment-align --file --alias";;
             -*)                cmd=usage; usage_error="Illegal option '$1'";;
             *)                 if [[ $1 =~ $re_is_cmd ]]; then
                                    cmd=run
@@ -174,13 +181,20 @@ environment variables (for internal use):
         done
     fi
 
-    if [[ $cmd == usage ]]; then
+    if [[ $cmd == noop ]]; then
+        : #do nothing
+    elif [[ $cmd == usage ]]; then
         _ok_cmd_usage "$usage_error" || return $?
     elif [[ $cmd == version ]]; then
         echo "ok-bash $version"
     elif [[ - == "$ok_file" || -r "$ok_file" ]]; then
         if [[ $cmd == run ]]; then
             _ok_cmd_run "$external_command" "$@" || return $?
+        elif [[ $cmd =~ \..+ ]]; then
+            if [[ $verbose -ge 2 ]]; then
+                echo "Running system command '$cmd'"
+            fi
+            ok_show "$ok_file" "$cmd" || return $?
         elif [[ $cmd == list ]]; then
             if [[ $once_check == 0 || ($once_check == 1 && $_OK__LAST_PWD != $(pwd)) ]]; then
                 ok_show "$ok_file" || return $?
@@ -272,5 +286,9 @@ else
     for x in $(set | grep "^_OK_" | awk -F '=' '{print $1}'); do 
         export "${x?}"
     done
+    # Initialize auto-complete, when in Bash
+    if [ -n "$BASH_VERSION" ]; then
+        . "${_OK__PATH_TO_ME}/ok-complete.bash"
+    fi
 fi
 unset called

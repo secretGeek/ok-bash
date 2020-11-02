@@ -63,7 +63,7 @@ Install it by "." (i.e. dot-sourcing) the "ok.sh" script from your `~/.profile` 
 
 💡 Pro tip: The script needs to be "sourced", otherwise commands like `cd` and `export` in your `.ok` file wouldn't have any effect.
 
-For more advanced installation options, check out the section _customization_ below.
+For more advanced installation options, check out the sections [customization](#customization) or [more installation info](#more-installation-info) below.
 
 
 ### First steps after installing
@@ -286,6 +286,31 @@ You can think up anything you want; the sky is the limit. I intent to keep a lis
 
 * [awesomecsv](https://gist.github.com/doekman/d6743e95bfb5f3d9491d3ec7b4a6e607) - Shows the `awesomecsv` list by using `ok-bash` in the terminal (and navigate to these links too)
 
+
+## More installation info
+
+On Linux machines with multiple users, it makes sense to have a shared installation:
+
+	cd /opt
+	sudo git clone https://github.com/secretGeek/ok-bash.git
+	# Let current users and users in group staff update the ok-bash installation
+	sudo chown -R $(id -un):staff /opt/ok-bash
+	sudo chmod -R 0775 ok-bash #
+
+Why install in `/opt`? I guess this would be [the best location](https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard). After all: `ok-bash` only works with _scripts_, not _binaries_.
+
+If you want all users to automatically have _ok-bash_ initialized:
+
+	echo ". /opt/ok-bash/ok.sh" | sudo tee "/etc/profile.d/ok-bash.sh"
+
+Why use tee? [Here is why!](https://wizardzines.com/comics/redirects/).
+
+For per-user use, add something like this to the `~/.profile`¹:
+
+	. /opt/ok-bash/ok.sh
+
+
+¹) or your favorite initialization script
 
 ## Development
 

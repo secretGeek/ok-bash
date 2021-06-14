@@ -57,7 +57,7 @@ And you can pass simple arguments to the commands. For example:
 
 Clone the git-repository (`git clone https://github.com/secretGeek/ok-bash.git`), so you can easily update it with a `git pull`.
 
-Install it by "." (i.e. dot-sourcing) the "ok.sh" script from your `~/.bashrc` (or your favorite initialization script), e.g:
+Install it by "." (i.e. dot-sourcing) the "ok.sh" script from your `~/.bashrc` (or your favorite [initialization script](https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html "Bash Startup Files")), e.g:
 
     . ~/path/to/ok-bash/ok.sh
 

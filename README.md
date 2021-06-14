@@ -57,7 +57,7 @@ And you can pass simple arguments to the commands. For example:
 
 Clone the git-repository (`git clone https://github.com/secretGeek/ok-bash.git`), so you can easily update it with a `git pull`.
 
-Install it by "." (i.e. dot-sourcing) the "ok.sh" script from your `~/.bashrc` (or your favorite [initialization script](https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html "Bash Startup Files")), e.g:
+Install it by "." (i.e. dot-sourcing) the "ok.sh" script from your `~/.bashrc` (or your favorite [initialization script][bashrc]), e.g:
 
     . ~/path/to/ok-bash/ok.sh
 
@@ -305,12 +305,14 @@ If you want all users to automatically have _ok-bash_ initialized:
 
 Why use tee? [Here is why!](https://wizardzines.com/comics/redirects/).
 
-For per-user use, add something like this to the `~/.profile`¹:
+For per-user use, add something like this to the `~/.bashrc`¹:
 
 	. /opt/ok-bash/ok.sh
 
 
-¹) or your favorite initialization script
+¹) or your favorite [initialization script][bashrc]
+
+[bashrc]: https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html "Bash Startup Files"
 
 ## Development
 

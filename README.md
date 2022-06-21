@@ -1,11 +1,11 @@
-﻿# ok-bash
+﻿# ok-sh
 
 See <http://secretgeek.net/ok> for the blog post launching (and describing) "ok".
 
 
-## "ok" gives you .ok folder profiles for bash
+## "ok" gives you .ok folder profiles for shell scripts
 
-(There is also a [PowerShell version](https://github.com/secretGeek/ok-ps/))
+`ok-sh` Works with `bash` and `zsh` shells (There is also a [PowerShell version](https://github.com/secretGeek/ok-ps/)). See also [shell support](#shell-support).
 
 `ok` makes you smarter and more efficient.
 
@@ -55,11 +55,11 @@ And you can pass simple arguments to the commands. For example:
 
 ### Installation
 
-Clone the git-repository (`git clone https://github.com/secretGeek/ok-bash.git`), so you can easily update it with a `git pull`.
+Clone the git-repository (`git clone https://github.com/secretGeek/ok-sh.git`), so you can easily update it with a `git pull`.
 
-Install it by "." (i.e. dot-sourcing) the "ok.sh" script from your `~/.bashrc` (or your favorite [initialization script][bashrc]), e.g:
+Install it by "." (i.e. dot-sourcing) the "ok.sh" script from your `~/.bashrc` (or your favorite [initialization][bashrc] [script][zshrc]), e.g:
 
-    . ~/path/to/ok-bash/ok.sh
+    . ~/path/to/ok-sh/ok.sh
 
 💡 Pro tip: The script needs to be "sourced", otherwise commands like `cd` and `export` in your `.ok` file wouldn't have any effect.
 
@@ -68,7 +68,7 @@ For more advanced installation options, check out the sections [customization](#
 
 ### First steps after installing
 
-You can try out the included `.ok` file by navigating to `~/path/to/ok-bash` and type `ok`. Explore some of the options.
+You can try out the included `.ok` file by navigating to `~/path/to/ok-sh` and type `ok`. Explore some of the options.
 
 Next you can create your own `.ok` file. Navigate to any folder where you want to use `ok`, and run for example:
 
@@ -85,7 +85,7 @@ After that you can look at customization. This allows you to do things such as:
 
 * show the ok-list automatically everytime you change folders
 * change the coloring scheme and other formatting options
-* create your own commands that use ok-bash
+* create your own commands that use ok-sh
 
 
 ## Named commands
@@ -108,7 +108,7 @@ When you now run `ok` you will see this:
 
 To run the second (now named) line, you can type `ok deploy`, but running `ok 2` still works. You don't even need to type the whole command: only the part from the left that's unique within the ok-file is enough. In this case that would be `ok d`, because no other command starts with the letter "d". The unique part of the name will be printed slightly brighter, if your terminal supports it.
 
-You can't use every text as a command name. The first character has to be a letter or underscore (`_`). After this, you also can use numbers, a dash (`-`) or a period (`.`). The command has to be ASCII and is interpreted case-sensitive. You can put whitespace around it, but that will be stripped because _ok-bash_ does some formatting so it looks nice.
+You can't use every text as a command name. The first character has to be a letter or underscore (`_`). After this, you also can use numbers, a dash (`-`) or a period (`.`). The command has to be ASCII and is interpreted case-sensitive. You can put whitespace around it, but that will be stripped because _ok-sh_ does some formatting so it looks nice.
 
 
 ## Auto completion
@@ -132,7 +132,7 @@ Some examples:
 If you tried to run the script directly, you might have noticed there are some options to customize `ok`. Let's show the output here:
 
     $ ./ok.sh
-    tip: "." (i.e. source) this file from your ~/.profile, e.g. ". /path/to/ok-bash/ok.sh <arguments>"
+    tip: "." (i.e. source) this file from your ~/.profile, e.g. ". /path/to/ok-sh/ok.sh <arguments>"
 
     arguments, if you need to customize (these can also be set via arguments/environment):
       reset            Reset (unset) all environment variables ($_OK_*) and will undo  'auto_show' if set (can modify $PROMPT_COMMAND)
@@ -187,7 +187,7 @@ Before I explain these helpers, I'd like to show the `ok`-command help screen, b
     environment variables (for internal use):
       _OK__DATAFILE_SIMILAR When set (unset), data is written to specified path+filename for analytic purpose.
       _OK__LAST_PWD         Remember the path (/path/to/some/place/with/an/.ok/file) that was last listed, for use with the list-once command.
-      _OK__PATH_TO_ME       The path (/path/to/ok-bash) to the location of this script.
+      _OK__PATH_TO_ME       The path (/path/to/ok-sh) to the location of this script.
       _OK__PATH_TO_PYTHON   The path (/path/to/bin/python3) to the used python interpreter.
 
 
@@ -197,9 +197,9 @@ How this all works together is explained below.
 
 ### Customizing behaviour
 
-So if you want to change the prompt to `% ` and want `ok` to prompt for a line number directly after entering `ok`, install ok-bash like this:
+So if you want to change the prompt to `% ` and want `ok` to prompt for a line number directly after entering `ok`, install ok-sh like this:
 
-    . ~/path/to/ok-bash/ok.sh prompt "% " prompt_default
+    . ~/path/to/ok-sh/ok.sh prompt "% " prompt_default
 
 The example from the beginning of this README will look like the following (the `$` is bash' prompt, and the `%` is ok's prompt now; we just changed the prompt, remember?):
 
@@ -217,7 +217,7 @@ The example from the beginning of this README will look like the following (the 
 
 Instead of using the installation helper, this can also be done by the following lines (the environment variables are listed by the `ok -v -h` command above):
 
-    . ~/path/to/ok-bash/ok.sh
+    . ~/path/to/ok-sh/ok.sh
     _OK_PROMPT="% "
     _OK_PROMPT_DEFAULT=1
 
@@ -225,19 +225,19 @@ Using an installation helper is a bit shorter, right?
 
 If you automatically want to see the `.ok` file when it's present when you change the current directory, _like a menu_, you can use the `auto_show` helper:
 
-    . ~/path/to/ok-bash/ok.sh auto_show
+    . ~/path/to/ok-sh/ok.sh auto_show
 
 This will actually modify `$PROMPT_COMMAND`, which is ran whenever you change directories. `auto_show` will add `ok list-once` to this command, so it will show the `.ok` file, but only once.
 
 If you want to play around with the installation helpers, `reset` as argument will go back to the initial state. Combined with a custom prompt and `auto_show` you can issue:
 
-    . ~/path/to/ok-bash/ok.sh reset prompt '>>>' auto_show
+    . ~/path/to/ok-sh/ok.sh reset prompt '>>>' auto_show
 
 You can make `ok` more "verbose" or more "quiet" by the options with the same name. More verbose mostly means an error message will be written to `stderr`. This might help you to understand ok's behaviour better. For example `ok 12345` will do nothing and exit with exit-code 2, but `ok -v 12345` will complain with `ERROR: entered line number '12345' does not exist`.
 
 Also as demonstrated in the beginning of this _Customization_ chapter, the help-screen will show the used environment-variabels when specifing `-v` or `--verbose`.
 
-The `-q` or `--quiet` option will suppress output from `ok-bash` itself. So when you run `ok -q 1` the command on line 1 will be executed, but `ok-bash` will not echo the command to the screen.
+The `-q` or `--quiet` option will suppress output from `ok-sh` itself. So when you run `ok -q 1` the command on line 1 will be executed, but `ok-sh` will not echo the command to the screen.
 
 You can specify the verbose/quiet-options as installation helper, environment variable or argument option. There is no environment variable for quiet. Instead you use `export _OK_VERBOSE=0` for quiet. The argument option will override any environment setting.
 
@@ -246,7 +246,7 @@ You can specify the verbose/quiet-options as installation helper, environment va
 
 Finally you can customize colors and formatting. I'll start with aligning comments, which can be indented, so they start on the same column. To align all comments:
 
-    . ~/path/to/ok-bash/ok.sh comment_align 3
+    . ~/path/to/ok-sh/ok.sh comment_align 3
 
 You can also do this by setting an environment variable:
 
@@ -264,7 +264,7 @@ The easiest way to determine colors is with [`tput`](https://www.tldp.org/HOWTO/
     _OK_C_HEADING="$(tput setaf 3)"  # show headings (lines without commands but with a comment) in YELLOW
     _OK_C_NUMBER="$(tput setaf 2)"   # show the command numbers and prompt in GREEN
 
-You  can also checkout `ok-bash`'s own `.ok` file to play around.
+You  can also checkout `ok-sh`'s own `.ok` file to play around.
 
 
 ### Creating your own commands
@@ -273,7 +273,7 @@ To explain the file/alias argument options, I will start with this example:
 
     alias SSH='ok --verbose --file ~/.ssh/.ok --alias SSH'
 
-This will create the alias `SSH`, which will show a list of all _ssh_ connections and/or let you establish a connection to one. The `--file ~/.ssh/.ok` tells `ok-bash` to look for the `.ok` file in that absolute path. The `--alias SSH` argument tells the alias what it's name is (in bash, normally an alias doesn't know it's own name unless it's been told so). The `--verbose` option will make `ok-bash` very vocal about any mistake you might make.
+This will create the alias `SSH`, which will show a list of all _ssh_ connections and/or let you establish a connection to one. The `--file ~/.ssh/.ok` tells `ok-sh` to look for the `.ok` file in that absolute path. The `--alias SSH` argument tells the alias what it's name is (in bash, normally an alias doesn't know it's own name unless it's been told so). The `--verbose` option will make `ok-sh` very vocal about any mistake you might make.
 
 Besides creating this alias, you also need to populate the `~/.ssh/.ok` file yourself. You could also generate this list from your `~/.ssh/config` file, but this works for me. I've grouped my connections in the `~/.ssh/.ok` file like this:
 
@@ -284,7 +284,7 @@ Besides creating this alias, you also need to populate the `~/.ssh/.ok` file you
 
 You can think up anything you want; the sky is the limit. I intent to keep a list here of examples for inspiration:
 
-* [awesomecsv](https://gist.github.com/doekman/d6743e95bfb5f3d9491d3ec7b4a6e607) - Shows the `awesomecsv` list by using `ok-bash` in the terminal (and navigate to these links too)
+* [awesomecsv](https://gist.github.com/doekman/d6743e95bfb5f3d9491d3ec7b4a6e607) - Shows the `awesomecsv` list by using `ok-sh` in the terminal (and navigate to these links too)
 
 
 ## More installation info
@@ -292,27 +292,42 @@ You can think up anything you want; the sky is the limit. I intent to keep a lis
 On Linux machines with multiple users, it makes sense to have a shared installation:
 
 	cd /opt
-	sudo git clone https://github.com/secretGeek/ok-bash.git
-	# Let current users and users in group staff update the ok-bash installation
-	sudo chown -R $(id -un):staff /opt/ok-bash
-	sudo chmod -R 0775 ok-bash #
+	sudo git clone https://github.com/secretGeek/ok-sh.git
+	# Let current users and users in group staff update the ok-sh installation
+	sudo chown -R $(id -un):staff /opt/ok-sh
+	sudo chmod -R 0775 ok-sh #
 
-Why install in `/opt`? I guess this would be [the best location](https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard). After all: `ok-bash` only works with _scripts_, not _binaries_.
+Why install in `/opt`? I guess this would be [the best location](https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard). After all: `ok-sh` only works with _scripts_, not _binaries_.
 
-If you want all users to automatically have _ok-bash_ initialized:
+If you want all users to automatically have _ok-sh_ initialized:
 
-	echo ". /opt/ok-bash/ok.sh" | sudo tee "/etc/profile.d/ok-bash.sh"
+	echo ". /opt/ok-sh/ok.sh" | sudo tee "/etc/profile.d/ok-sh.sh"
 
 Why use tee? [Here is why!](https://wizardzines.com/comics/redirects/).
 
 For per-user use, add something like this to the `~/.bashrc`¹:
 
-	. /opt/ok-bash/ok.sh
+	. /opt/ok-sh/ok.sh
 
 
-¹) or your favorite [initialization script][bashrc]
+¹) or your favorite [initialization][bashrc] [script][zshrc].
 
 [bashrc]: https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html "Bash Startup Files"
+[zshrc]: https://zsh.sourceforge.io/Doc/Release/Files.html#Files "Zsh Startup/Shutdown Files"
+
+
+## Shell support
+
+Bash is supported, starting with version 3.2, which is installed on macOS, and up (most Linux installations).
+
+Zsh is also supported, but with limited options for now:
+
+* when sourcing ok.sh in the current folder, a path is needed (`. ok.sh` fails, but `. ./ok.sh` works)
+* autocomplete is not supported at the moment
+* the `auto_show` helper does currently not work with zsh, because of [$PROMPT_COMMAND](https://superuser.com/questions/735660/whats-the-zsh-equivalent-of-bashs-prompt-command)
+* the `list-prompt` command doesn't work (error: `ok:read:194: -p: no coprocess`)
+* when running `./ok.sh` as a script, zsh needs bash to execute the script, because of the `env`-construct.
+
 
 ## Development
 

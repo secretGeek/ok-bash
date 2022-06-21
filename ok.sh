@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-called=$_
-
 #basically, get the absolute path of this script (handy for loads of things)
-pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null || (>&2 echo "ok-bash: pushd failed")
+pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null || (>&2 echo "ok-sh: pushd failed")
 _OK__PATH_TO_ME=$(pwd)
-popd > /dev/null || (>&2 echo "ok-bash: popd failed")
+popd > /dev/null || (>&2 echo "ok-sh: popd failed")
 
 # Don't let ok-show.py's shebang control the python version; prefer python3 above python regular (2)
 _OK__PATH_TO_PYTHON=$(command -v python3 || command -v python)
@@ -114,7 +112,7 @@ environment variables (for internal use):
         eval "$line_text"
     }
 
-    local -r version="0.8.4dev"
+    local -r version="0.9.0dev"
     # used for colored output (see: https://stackoverflow.com/a/20983251/56)
     # notice: this is partly a duplication from code in ok-show.py
     local -r c_nc=$'\033''[0m'
@@ -186,11 +184,11 @@ environment variables (for internal use):
     elif [[ $cmd == usage ]]; then
         _ok_cmd_usage "$usage_error" || return $?
     elif [[ $cmd == version ]]; then
-        echo "ok-bash $version"
+        echo "ok-sh $version"
     elif [[ - == "$ok_file" || -r "$ok_file" ]]; then
         if [[ $cmd == run ]]; then
             _ok_cmd_run "$external_command" "$@" || return $?
-        elif [[ $cmd =~ \..+ ]]; then
+        elif [[ $cmd =~ [.].+ ]]; then
             if [[ $verbose -ge 2 ]]; then
                 echo "Running system command '$cmd'"
             fi
@@ -225,6 +223,10 @@ environment variables (for internal use):
             fi
             _OK__LAST_PWD=$(pwd)
             export _OK__LAST_PWD
+        else
+            if [[ $verbose -ge 2 ]]; then
+                echo "Unknown command/state: '$cmd'"
+            fi
         fi
     else
         if [[ $cmd == list ]]; then
@@ -237,7 +239,18 @@ environment variables (for internal use):
     fi
 }
 
-if [[ "$called" == "$0" ]]; then
+is_sourced=""
+if [ "${ZSH_ARGZERO:+IS_SET}" = "IS_SET" ]; then
+    if [ "$ZSH_ARGZERO" = "zsh" ]; then
+        is_sourced="yes_indeed"
+    fi
+else 
+    if [ "$0" = "-bash" ]; then
+        is_sourced="yes_indeed"
+    fi
+fi
+
+if [ -z "$is_sourced" ]; then
     if [[ -z "$_OK__PATH_TO_PYTHON" ]]; then
         >&2 echo "ERROR: python is required to run 'ok', but can't be found"
         exit 1
@@ -246,7 +259,7 @@ if [[ "$called" == "$0" ]]; then
         shift
         ok "$@"
     else
-        # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/path/to/ok-bash/ok.sh"
+        # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/path/to/ok-sh/ok.sh"
         echo -e "tip: \".\" (i.e. source) this file from your ~/.profile, e.g. \". ${_OK__PATH_TO_ME/$HOME/~}/ok.sh <arguments>\"
 
 arguments, if you need to customize (these can also be set via arguments/environment):
@@ -291,4 +304,3 @@ else
         . "${_OK__PATH_TO_ME}/ok-complete.bash"
     fi
 fi
-unset called

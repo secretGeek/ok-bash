@@ -325,7 +325,6 @@ Zsh is also supported, but with limited options for now:
 * when sourcing ok.sh in the current folder, a path is needed (`. ok.sh` fails, but `. ./ok.sh` works)
 * autocomplete is not supported at the moment
 * the `auto_show` helper does currently not work with zsh, because of [$PROMPT_COMMAND](https://superuser.com/questions/735660/whats-the-zsh-equivalent-of-bashs-prompt-command)
-* the `list-prompt` command doesn't work (error: `ok:read:194: -p: no coprocess`)
 * when running `./ok.sh` as a script, zsh needs bash to execute the script, because of the `env`-construct.
 
 

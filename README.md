@@ -320,12 +320,12 @@ For per-user use, add something like this to the `~/.bashrc`¹:
 
 Bash is supported, starting with version 3.2, which is installed on macOS, and up (most Linux installations).
 
-Zsh is also supported, but with limited options for now:
+Zsh is also supported, but some notes:
 
-* when sourcing ok.sh in the current folder, a path is needed (`. ok.sh` fails, but `. ./ok.sh` works)
 * autocomplete is not supported at the moment
-* the `auto_show` helper does currently not work with zsh, because of [$PROMPT_COMMAND](https://superuser.com/questions/735660/whats-the-zsh-equivalent-of-bashs-prompt-command)
-* when running `./ok.sh` as a script, zsh needs bash to execute the script, because of the `env`-construct.
+* and you have to consider a bit of different behaviour you get with bash:
+	- when sourcing ok.sh in the current folder, a path is needed (`. ok.sh` fails, but `. ./ok.sh` works)
+	- when running `./ok.sh` as a script, zsh needs bash to execute the script, because of the `env`-construct.
 
 
 ## Development

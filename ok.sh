@@ -208,12 +208,12 @@ environment variables (for internal use):
                     read -r prompt_input
                     if [[ $prompt_input =~ $re_num_begin ]]; then
                         #save command to history first
-                        if [[ $(which print || echo "") = "print: shell built-in command" ]]; then
+                        if [ ! -z ${ZSH_VERSION+x} ]; then
                             # The Zsh way to do it
-                            print -s "$args $prompt_input"
+                            builtin print -s "$args $prompt_input"
                         else
                             # The Bash way to do it
-                            history -s "$args $prompt_input"
+                            builtin history -s "$args $prompt_input"
                         fi
                         #execute command
                         eval _ok_cmd_run "$prompt_input" || return $?
@@ -296,7 +296,14 @@ else
             comment_align)  if [[ $# -ge 2 ]]; then export _OK_COMMENT_ALIGN=$2; shift; else >&2 echo "the comment_align argument needs a number (0..3) as 2nd argument"; fi;;
             verbose)        export _OK_VERBOSE=2;;
             quiet)          export _OK_VERBOSE=0;;
-            auto_show)      if [[ ! $PROMPT_COMMAND =~ $re_list_once ]]; then export PROMPT_COMMAND="${PROMPT_COMMAND}"$'\n'"${re_list_once}"; fi;;
+            auto_show)      if [ ! -z ${ZSH_VERSION+x} ]; then
+                                function _zsh_list_once {
+                                    ok list-once
+                                }
+                                precmd_functions+=( _zsh_list_once )
+                            else
+                                if [[ ! $PROMPT_COMMAND =~ $re_list_once ]]; then export PROMPT_COMMAND="${PROMPT_COMMAND}"$'\n'"${re_list_once}"; fi
+                            fi;;
             *) >&2 echo "Ignoring unknown argument '$1'";;
         esac
         shift

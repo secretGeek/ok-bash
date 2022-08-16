@@ -208,7 +208,7 @@ environment variables (for internal use):
                     read -r prompt_input
                     if [[ $prompt_input =~ $re_num_begin ]]; then
                         #save command to history first
-                        if [ ! -z ${ZSH_VERSION+x} ]; then
+                        if [ -n "${ZSH_VERSION+x}" ]; then
                             # The Zsh way to do it
                             builtin print -s "$args $prompt_input"
                         else
@@ -296,7 +296,7 @@ else
             comment_align)  if [[ $# -ge 2 ]]; then export _OK_COMMENT_ALIGN=$2; shift; else >&2 echo "the comment_align argument needs a number (0..3) as 2nd argument"; fi;;
             verbose)        export _OK_VERBOSE=2;;
             quiet)          export _OK_VERBOSE=0;;
-            auto_show)      if [ ! -z ${ZSH_VERSION+x} ]; then
+            auto_show)      if [ -n "${ZSH_VERSION+x}" ]; then
                                 function _zsh_list_once {
                                     ok list-once
                                 }

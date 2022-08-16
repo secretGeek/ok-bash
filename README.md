@@ -3,9 +3,9 @@
 See <http://secretgeek.net/ok> for the blog post launching (and describing) "ok".
 
 
-## "ok" gives you .ok folder profiles for bash
+## "ok" gives you .ok folder profiles for shell scripts
 
-(There is also a [PowerShell version](https://github.com/secretGeek/ok-ps/))
+`ok-bash` Works with `bash` and `zsh` shells (There is also a [PowerShell version](https://github.com/secretGeek/ok-ps/)). See also [shell support](#shell-support).
 
 `ok` makes you smarter and more efficient.
 
@@ -57,7 +57,7 @@ And you can pass simple arguments to the commands. For example:
 
 Clone the git-repository (`git clone https://github.com/secretGeek/ok-bash.git`), so you can easily update it with a `git pull`.
 
-Install it by "." (i.e. dot-sourcing) the "ok.sh" script from your `~/.bashrc` (or your favorite [initialization script][bashrc]), e.g:
+Install it by "." (i.e. dot-sourcing) the "ok.sh" script from your `~/.bashrc` (or your favorite [initialization][bashrc] [script][zshrc]), e.g:
 
     . ~/path/to/ok-bash/ok.sh
 
@@ -108,7 +108,7 @@ When you now run `ok` you will see this:
 
 To run the second (now named) line, you can type `ok deploy`, but running `ok 2` still works. You don't even need to type the whole command: only the part from the left that's unique within the ok-file is enough. In this case that would be `ok d`, because no other command starts with the letter "d". The unique part of the name will be printed slightly brighter, if your terminal supports it.
 
-You can't use every text as a command name. The first character has to be a letter or underscore (`_`). After this, you also can use numbers, a dash (`-`) or a period (`.`). The command has to be ASCII and is interpreted case-sensitive. You can put whitespace around it, but that will be stripped because _ok-bash_ does some formatting so it looks nice.
+You can't use every text as a command name. The first character has to be a letter or underscore (`_`). After this, you also can use numbers, a dash (`-`) or a period (`.`). The command has to be ASCII and is interpreted case-sensitive. You can put whitespace around it, but that will be stripped because _ok-sh_ does some formatting so it looks nice.
 
 
 ## Auto completion
@@ -299,7 +299,7 @@ On Linux machines with multiple users, it makes sense to have a shared installat
 
 Why install in `/opt`? I guess this would be [the best location](https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard). After all: `ok-bash` only works with _scripts_, not _binaries_.
 
-If you want all users to automatically have _ok-bash_ initialized:
+If you want all users to automatically have _ok-sh_ initialized:
 
 	echo ". /opt/ok-bash/ok.sh" | sudo tee "/etc/profile.d/ok-bash.sh"
 
@@ -310,9 +310,23 @@ For per-user use, add something like this to the `~/.bashrc`¹:
 	. /opt/ok-bash/ok.sh
 
 
-¹) or your favorite [initialization script][bashrc]
+¹) or your favorite [initialization][bashrc] [script][zshrc].
 
 [bashrc]: https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html "Bash Startup Files"
+[zshrc]: https://zsh.sourceforge.io/Doc/Release/Files.html#Files "Zsh Startup/Shutdown Files"
+
+
+## Shell support
+
+Bash is supported, starting with version 3.2, which is installed on macOS, and up (most Linux installations).
+
+Zsh is also supported, but some notes:
+
+* autocomplete is not supported at the moment
+* and you have to consider a bit of different behaviour you get with bash:
+	- when sourcing ok.sh in the current folder, a path is needed (`. ok.sh` fails, but `. ./ok.sh` works)
+	- when running `./ok.sh` as a script, zsh needs bash to execute the script, because of the `env`-construct.
+
 
 ## Development
 

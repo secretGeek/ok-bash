@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-called=$_
-
 #basically, get the absolute path of this script (handy for loads of things)
-pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null || (>&2 echo "ok-bash: pushd failed")
+pushd "$(dirname "${BASH_SOURCE[0]:-$0}")" > /dev/null || (>&2 echo "ok-sh: pushd failed")
 _OK__PATH_TO_ME=$(pwd)
-popd > /dev/null || (>&2 echo "ok-bash: popd failed")
+popd > /dev/null || (>&2 echo "ok-sh: popd failed")
 
 # Don't let ok-show.py's shebang control the python version; prefer python3 above python regular (2)
 _OK__PATH_TO_PYTHON=$(command -v python3 || command -v python)
@@ -114,7 +112,7 @@ environment variables (for internal use):
         eval "$line_text"
     }
 
-    local -r version="0.8.4dev"
+    local -r version="0.9.0dev"
     # used for colored output (see: https://stackoverflow.com/a/20983251/56)
     # notice: this is partly a duplication from code in ok-show.py
     local -r c_nc=$'\033''[0m'
@@ -186,11 +184,11 @@ environment variables (for internal use):
     elif [[ $cmd == usage ]]; then
         _ok_cmd_usage "$usage_error" || return $?
     elif [[ $cmd == version ]]; then
-        echo "ok-bash $version"
+        echo "ok-sh $version"
     elif [[ - == "$ok_file" || -r "$ok_file" ]]; then
         if [[ $cmd == run ]]; then
             _ok_cmd_run "$external_command" "$@" || return $?
-        elif [[ $cmd =~ \..+ ]]; then
+        elif [[ $cmd =~ [.].+ ]]; then
             if [[ $verbose -ge 2 ]]; then
                 echo "Running system command '$cmd'"
             fi
@@ -204,11 +202,19 @@ environment variables (for internal use):
                 elif [[ $show_prompt == 1 && $list_result == 0 ]]; then #only show prompt, if there where commands printed
                     local prompt_input
                     local re_num_begin="${re_begins_with_cmd}($| )" # You can enter arguments at the ok-prompt too, hence different regex
+                    # Show a prompt (read -p "XXX" fails in zsh)
+                    echo -n "${c_prompt}${prompt}${c_nc}" 
                     # The following read doesn't work in a sub-shell, so list-prompt fails when using it in a script
-                    read -rp "${c_prompt}${prompt}${c_nc}" prompt_input
+                    read -r prompt_input
                     if [[ $prompt_input =~ $re_num_begin ]]; then
                         #save command to history first
-                        history -s "$args $prompt_input"
+                        if [ -n "${ZSH_VERSION+x}" ]; then
+                            # The Zsh way to do it
+                            builtin print -s "$args $prompt_input"
+                        else
+                            # The Bash way to do it
+                            builtin history -s "$args $prompt_input"
+                        fi
                         #execute command
                         eval _ok_cmd_run "$prompt_input" || return $?
                     else
@@ -225,6 +231,10 @@ environment variables (for internal use):
             fi
             _OK__LAST_PWD=$(pwd)
             export _OK__LAST_PWD
+        else
+            if [[ $verbose -ge 2 ]]; then
+                echo "Unknown command/state: '$cmd'"
+            fi
         fi
     else
         if [[ $cmd == list ]]; then
@@ -237,7 +247,18 @@ environment variables (for internal use):
     fi
 }
 
-if [[ "$called" == "$0" ]]; then
+is_sourced=""
+if [ "${ZSH_ARGZERO:+IS_SET}" = "IS_SET" ]; then
+    if [ "$ZSH_ARGZERO" = "zsh" ]; then
+        is_sourced="yes_indeed"
+    fi
+else 
+    if [ "$0" = "-bash" ]; then
+        is_sourced="yes_indeed"
+    fi
+fi
+
+if [ -z "$is_sourced" ]; then
     if [[ -z "$_OK__PATH_TO_PYTHON" ]]; then
         >&2 echo "ERROR: python is required to run 'ok', but can't be found"
         exit 1
@@ -246,7 +267,7 @@ if [[ "$called" == "$0" ]]; then
         shift
         ok "$@"
     else
-        # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/path/to/ok-bash/ok.sh"
+        # tip: "." (i.e. source) this file from your profile (.bashrc), e.g. ". ~/path/to/ok-sh/ok.sh"
         echo -e "tip: \".\" (i.e. source) this file from your ~/.profile, e.g. \". ${_OK__PATH_TO_ME/$HOME/~}/ok.sh <arguments>\"
 
 arguments, if you need to customize (these can also be set via arguments/environment):
@@ -275,7 +296,14 @@ else
             comment_align)  if [[ $# -ge 2 ]]; then export _OK_COMMENT_ALIGN=$2; shift; else >&2 echo "the comment_align argument needs a number (0..3) as 2nd argument"; fi;;
             verbose)        export _OK_VERBOSE=2;;
             quiet)          export _OK_VERBOSE=0;;
-            auto_show)      if [[ ! $PROMPT_COMMAND =~ $re_list_once ]]; then export PROMPT_COMMAND="${PROMPT_COMMAND}"$'\n'"${re_list_once}"; fi;;
+            auto_show)      if [ -n "${ZSH_VERSION+x}" ]; then
+                                function _zsh_list_once {
+                                    ok list-once
+                                }
+                                precmd_functions+=( _zsh_list_once )
+                            else
+                                if [[ ! $PROMPT_COMMAND =~ $re_list_once ]]; then export PROMPT_COMMAND="${PROMPT_COMMAND}"$'\n'"${re_list_once}"; fi
+                            fi;;
             *) >&2 echo "Ignoring unknown argument '$1'";;
         esac
         shift
@@ -291,4 +319,3 @@ else
         . "${_OK__PATH_TO_ME}/ok-complete.bash"
     fi
 fi
-unset called

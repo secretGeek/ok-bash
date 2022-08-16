@@ -263,7 +263,7 @@ def main():
     parser.add_argument('--terminal_width',    '-t', metavar='TW',  type=int, default=None, help='number of columns of the terminal (tput cols)')
     parser.add_argument('--internal_commands', '-I', metavar='IC',  type=str, default='list,list-once,list-prompt,help', help='Internal commands of ok (that cannot be used as named lines)')
 
-    parser.add_argument('command',                   metavar='CMD', type=str, nargs='?', help='The command name or line number to show (system commands: .list_commands)')
+    parser.add_argument('command',                   metavar='CMD', type=str, nargs='?', help='The command name or line number to show (system commands: .list_commands; .list_named_commands)')
     args = parser.parse_args()
 
     if args.terminal_width is None:
@@ -313,8 +313,13 @@ def main():
     format_lines(p_lines, args.heading_align, args.comment_align, nr_positions_line_nr, args.terminal_width)
 
     if system_command:
+        all_commands = [p_line.get_line_name_or_number() for p_line in p_lines if p_line.name is not None]
         if args.command == '.list_commands':
-            print(' '.join([p_line.get_line_name_or_number() for p_line in p_lines if p_line.name is not None]+internal_commands))
+            print(' '.join(all_commands))
+        elif args.command in ('.list_named_commands', '.summary'):
+            named_commands = list(set(all_commands) - set(internal_commands))
+            named_commands.sort()
+            print(' '.join(named_commands))
         else:
             print('Unknown system command "{}"'.format(args.command))
             sys.exit(1)

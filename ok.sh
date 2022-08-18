@@ -28,6 +28,7 @@ command (use one):
   list-prompt         Show the list and wait for input at the ok-prompt (like --list and <number> in one command).$list_prompt_default
   help                Show this usage page.
 options:
+  -s, --summary       Show all named commands, space seperated
   -c, --comment-align N  Level of comment alignment. See \$_OK_COMMENT_ALIGN
   -v, --verbose       Show more output, mostly errors. Also it shows environment-variables in this screen.
   -q, --quiet         Only show really necessary output, so surpress echoing the command.
@@ -156,8 +157,9 @@ environment variables (for internal use):
             -f | --file)       if [[ $# -gt 1 && -r "$2" || "-" == "$2" ]]; then ok_file="$2"; shift; else _ok_cmd_usage "No file provided, or file is not readable ($2)" || return $?; fi;;
             -a | --alias)      if [[ $# -gt 1 && -n "$2" ]]; then args="$2"; shift; else _ok_cmd_usage "Empty or no alias provided" || return $?; fi;;
             #system options
+            -s | --summary)    cmd=".list_named_commands";;
             --sys-cmds)        cmd=".list_commands";;
-            --sys-opts)        cmd=noop; echo "--version --help --verbose --quiet --comment-align --file --alias";;
+            --sys-opts)        cmd=noop; echo "--version --help --verbose --quiet --comment-align --file --alias --summary";;
             -*)                cmd=usage; usage_error="Illegal option '$1'";;
             *)                 if [[ $1 =~ $re_is_cmd ]]; then
                                    cmd=run

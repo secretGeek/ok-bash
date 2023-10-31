@@ -179,6 +179,20 @@ environment variables (for internal use):
                 break # found
             fi
         done
+        if [[ -z "$ok_file" ]]; then #check up in the folder tree
+            dir=$(pwd)
+
+            # While we haven't reached the root directory
+            while [ "$dir" != "/" ]; do
+                # Check if the .ok file exists in the current directory
+                if [ -e "$dir/.ok" ]; then
+                    ok_file="$dir/.ok"
+                    break #found
+                fi
+                # Move up one directory
+                dir=$(dirname "$dir")
+            done
+        fi
     fi
 
     if [[ $cmd == noop ]]; then

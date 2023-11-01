@@ -34,6 +34,7 @@ options:
   -q, --quiet         Only show really necessary output, so surpress echoing the command.
   -f, --file <file>   Use a custom file instead of the default '.ok-sh' and '.ok' files; use '-' for stdin
   -a, --alias <name>  When using 'ok' in an alias, <name> is used to keep the history correct when used with 'list-prompt'.
+  -p, --parent        If no .ok file found, search upwards in folder tree for an .ok file.   
   -V, --version       Show version number and exit
   -h, --help          Show this help screen"
         if [[ $verbose -ge 2 ]]; then
@@ -110,6 +111,17 @@ environment variables (for internal use):
             >&2 echo "$line_text"
             return "$res"
         fi
+
+        # if using ok file from parent, need to account for relative paths
+        if [ "$parent" -eq 1 ]; then
+            if [ "$(pwd)" != "$(dirname "$line_text")" ]; then #executing from parent
+                if [[ $line_text != /* ]]; then #relative path
+                    dir_ok_file=$(dirname "$ok_file")
+                    line_text=$(echo "$line_text" | \sed "s|\.|$dir_ok_file|")                
+                fi
+            fi
+        fi
+
         eval "$line_text"
     }
 
@@ -134,6 +146,7 @@ environment variables (for internal use):
     local re_begins_with_cmd='^([1-9][0-9]*|[A-Za-z_][-A-Za-z0-9_.]*)' # IMPORTANT: duplicate regex; "definition" in file `ok-show.py`
     local re_is_cmd="${re_begins_with_cmd}\$"
     local cmd=list
+    local parent=0
     local external_command=0
     local once_check=0
     local show_prompt=${_OK_PROMPT_DEFAULT:-0}
@@ -150,6 +163,7 @@ environment variables (for internal use):
             #options
             -V | --version)    cmd=version;;
             -\? | -h | --help) cmd=usage;;
+            -p | --parent)     parent=1;; 
             -v | --verbose)    verbose=2;;
             -q | --quiet)      verbose=0;;
             -c | --comment_align | --comment-align) # between words seperator: bash=prefer dash; python=prefer underscore 
@@ -179,19 +193,21 @@ environment variables (for internal use):
                 break # found
             fi
         done
-        if [[ -z "$ok_file" ]]; then #check up in the folder tree
-            dir=$(pwd)
+        if [ "$parent" -eq 1 ]; then
+            if [[ -z "$ok_file" ]]; then #check up in the folder tree
+                dir=$(pwd)
 
-            # While we haven't reached the root directory
-            while [ "$dir" != "/" ]; do
-                # Check if the .ok file exists in the current directory
-                if [ -e "$dir/.ok" ]; then
-                    ok_file="$dir/.ok"
-                    break #found
-                fi
-                # Move up one directory
-                dir=$(dirname "$dir")
-            done
+                # While we haven't reached the root directory
+                while [ "$dir" != "/" ]; do
+                    # Check if the .ok file exists in the current directory
+                    if [ -e "$dir/.ok" ]; then
+                        ok_file="$dir/.ok"
+                        break #found
+                    fi
+                    # Move up one directory
+                    dir=$(dirname "$dir")
+                done
+            fi
         fi
     fi
 

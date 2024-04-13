@@ -93,12 +93,12 @@ class ParsedLine:
             self.indent = 0
 
 class rx:
-    heading    = re.compile('^[ \t]*(#)')
-    whitespace = re.compile('^[ \t]*$')
-    comment    = re.compile('(^[ \t]+)?(?<!\S)(?=#)(?!#\{)')
-    named_line = re.compile('^[ \t]*([A-Za-z_][-A-Za-z0-9_.]*)[ \t]*:')
-    faulty_named_line = re.compile('^[ \t]*([^:"][^ :"]{0,19})[ \t]*:')
-    ansi_len   = re.compile('\x1b\[.*?m')
+    heading    = re.compile(r'^[ \t]*(#)')
+    whitespace = re.compile(r'^[ \t]*$')
+    comment    = re.compile(r'(^[ \t]+)?(?<!\S)(?=#)(?!#\{)')
+    named_line = re.compile(r'^[ \t]*([A-Za-z_][-A-Za-z0-9_.]*)[ \t]*:')
+    faulty_named_line = re.compile(r'^[ \t]*([^:"][^ :"]{0,19})[ \t]*:')
+    ansi_len   = re.compile(r'\x1b\[.*?m')
 
 def get_env(name, default, legal_values=None):
     val = os.environ[name] if name in os.environ else default
@@ -363,7 +363,7 @@ if __name__ == "__main__":
     main()
 
 
-'''
+r'''
 Parsing of comments is not yet perfect. It's also quite complicated. 
 See also:
    http://www.apeth.com/nonblog/stories/textmatebundle.html

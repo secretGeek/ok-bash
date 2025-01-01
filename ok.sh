@@ -280,8 +280,9 @@ environment variables (for internal use):
 }
 
 is_sourced=""
-if [ "${ZSH_ARGZERO:+IS_SET}" = "IS_SET" ]; then
-    if [ "$ZSH_ARGZERO" = "zsh" ]; then
+if [ -n "$ZSH_VERSION" ]; then
+    # For zsh, check if script name matches $0
+    if [[ "${(%):-%N}" == *"ok.sh" ]]; then
         is_sourced="yes_indeed"
     fi
 else 

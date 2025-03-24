@@ -66,7 +66,9 @@ environment variables (for internal use):
   _OK__DATAFILE_SIMILAR When set (${_OK__DATAFILE_SIMILAR:-unset}), data is written to specified path+filename for analytic purpose.
   _OK__LAST_PWD         Remember the path ($_OK__LAST_PWD) that was last listed, for use with the list-once command.
   _OK__PATH_TO_ME       The path ($_OK__PATH_TO_ME) to the location of this script.
-  _OK__PATH_TO_PYTHON   The path ($_OK__PATH_TO_PYTHON) to the used python interpreter.\\n"
+  _OK__PATH_TO_PYTHON   The path ($_OK__PATH_TO_PYTHON) to the used python interpreter.
+path to the current ok-file:
+  ${ok_file:-not-set}\\n"
         fi
         if [[ -n $1 ]]; then
             echo -e "\\a$1\\n"

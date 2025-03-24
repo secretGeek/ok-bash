@@ -153,6 +153,9 @@ environment variables (for internal use):
     local comment_align=${_OK_COMMENT_ALIGN:-2}
     local usage_error=
     local loop_args=1 #the Pascal-way to break loops
+    local ok_config_path="${XDG_CONFIG_HOME:-$HOME/.config}/ok-sh"
+    local ok_lookup="${ok_config_path}/ok-lookup"
+    
     while (( $# > 0 && loop_args == 1 )) ; do
         case $1 in
             #commands (duplicate there in ok-show.py arguments)
@@ -208,6 +211,14 @@ environment variables (for internal use):
                     dir=$(dirname "$dir")
                 done
             fi
+        fi
+        # When no ok-file found, and the ok-lookup file exists, check that.
+        if [[ -z "$ok_file" && -e "$ok_lookup" ]]; then
+          ok_file="$(awk -F : -v PWD="$(pwd)" $'$1 == PWD { print $2; }' "$ok_lookup")"
+          # check if it is a relative path
+          if [[ $ok_file && ${ok_file:0:1} != '/' ]]; then
+            ok_file="$ok_config_path/$ok_file"
+          fi
         fi
     fi
 

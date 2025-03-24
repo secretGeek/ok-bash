@@ -66,7 +66,9 @@ environment variables (for internal use):
   _OK__DATAFILE_SIMILAR When set (${_OK__DATAFILE_SIMILAR:-unset}), data is written to specified path+filename for analytic purpose.
   _OK__LAST_PWD         Remember the path ($_OK__LAST_PWD) that was last listed, for use with the list-once command.
   _OK__PATH_TO_ME       The path ($_OK__PATH_TO_ME) to the location of this script.
-  _OK__PATH_TO_PYTHON   The path ($_OK__PATH_TO_PYTHON) to the used python interpreter.\\n"
+  _OK__PATH_TO_PYTHON   The path ($_OK__PATH_TO_PYTHON) to the used python interpreter.
+path to the current ok-file:
+  ${ok_file:-not-set}\\n"
         fi
         if [[ -n $1 ]]; then
             echo -e "\\a$1\\n"
@@ -153,6 +155,9 @@ environment variables (for internal use):
     local comment_align=${_OK_COMMENT_ALIGN:-2}
     local usage_error=
     local loop_args=1 #the Pascal-way to break loops
+    local ok_config_path="${XDG_CONFIG_HOME:-$HOME/.config}/ok-sh"
+    local ok_lookup="${ok_config_path}/ok-lookup"
+    
     while (( $# > 0 && loop_args == 1 )) ; do
         case $1 in
             #commands (duplicate there in ok-show.py arguments)
@@ -208,6 +213,14 @@ environment variables (for internal use):
                     dir=$(dirname "$dir")
                 done
             fi
+        fi
+        # When no ok-file found, and the ok-lookup file exists, check that.
+        if [[ -z "$ok_file" && -e "$ok_lookup" ]]; then
+          ok_file="$(awk -F : -v PWD="$(pwd)" $'$1 == PWD { print $2; }' "$ok_lookup")"
+          # check if it is a relative path
+          if [[ $ok_file && ${ok_file:0:1} != '/' ]]; then
+            ok_file="$ok_config_path/$ok_file"
+          fi
         fi
     fi
 
